@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DaisyUI Themes (Optional) */
+@layer utilities {
+  .theme-light {
+    @apply bg-base-100 text-base-content;
+  }
+}
