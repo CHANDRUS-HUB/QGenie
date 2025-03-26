@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../models/db");
+const nodemailer = require("nodemailer");
 const { validateUserInput } = require("./utils/validators");
 
 // Helper function to generate JWT token
@@ -11,11 +12,75 @@ const generateToken = (user) => {
     });
 };
 
+// Email sender configuration
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
+// Helper function to send OTP via email
+const sendOTPEmail = (email, otp) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "QGenie - Email Verification for Signup",
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #4CAF50;">Welcome to QGenie!</h2>
+                <p>Thank you for signing up. Please use the following OTP to verify your account:</p>
+                <h3 style="color: #4CAF50;">${otp}</h3>
+                <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+                <p>If you did not request this, please ignore this email.</p>
+                <br>
+                <p>Best regards,</p>
+                <p>The QGenie Team</p>
+            </div>
+        `,
+    };
+    return transporter.sendMail(mailOptions);
+};
+
+const sendOTPForgotpassword = (email, otp) => {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "QGenie - Password Reset Request",
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #4CAF50;">Password Reset Request</h2>
+                <p>We received a request to reset your password. Please use the following OTP to reset your password:</p>
+                <h3 style="color: #4CAF50;">${otp}</h3>
+                <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+                <p>If you did not request this, please ignore this email or contact support.</p>
+                <br>
+                <p>Best regards,</p>
+                <p>The QGenie Team</p>
+            </div>
+        `,
+    };
+    return transporter.sendMail(mailOptions);
+};
+
+// Generate random OTP
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Store OTP temporarily
+const otpStore = {};
 
 // Register a new user
 const registerUser = async (req, res) => {
     const { username, email, password, phoneNumber, role } = req.body;
+
+    if(!username) return res.status(400).json({ message: "Username is required" });
+    if(!email) return res.status(400).json({ message: "Email is required" });
+    if(!password) return res.status(400).json({ message: "Password is required" });
+    if(!phoneNumber) return res.status(400).json({ message: "Phone Number is required" });
+    if(!role) return res.status(400).json({ message: "Role is required" });
 
     // Validate user input
     const errors = validateUserInput(username, email, password, phoneNumber, role);
@@ -31,21 +96,92 @@ const registerUser = async (req, res) => {
         }
 
         try {
-            // Hash password and save user
-            const hashedPassword = await bcrypt.hash(password, 10);
-            db.query(
-                `INSERT INTO users (username, email, password, phoneNumber, role) VALUES (?, ?, ?, ?, ?)`,
-                [username, email, hashedPassword, phoneNumber, role],
-                (err) => {
-                    if (err) return res.status(500).json({ message: "Database error", err });
-                    res.status(201).json({ message: "User registered successfully" });
-                }
-            );
+            // Send OTP for email verification
+            const otp = generateOTP();
+            otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }; // OTP valid for 10 mins
+            await sendOTPEmail(email, otp);
+            res.status(200).json({ message: "OTP sent to email for verification." });
         } catch (error) {
-            res.status(500).json({ message: "Error hashing password", error });
+            res.status(500).json({ message: "Error sending OTP", error });
         }
     });
 };
+
+// Verify OTP and save user
+const verifyOTP = async (req, res) => {
+    const { username, email, password, phoneNumber, role, otp } = req.body;
+
+    const storedOtp = otpStore[email];
+    if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
+        return res.status(400).json({ message: "Invalid or expired OTP." });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        db.query(
+            `INSERT INTO users (username, email, password, phoneNumber, role) VALUES (?, ?, ?, ?, ?)`,
+            [username, email, hashedPassword, phoneNumber, role],
+            (err) => {
+                if (err) return res.status(500).json({ message: "Database error", err });
+                delete otpStore[email]; // Clear OTP after successful registration
+                res.status(201).json({ message: "User registered successfully." });
+            }
+        );
+    } catch (error) {
+        res.status(500).json({ message: "Error saving user", error });
+    }
+};
+
+// Forgot Password (Send OTP)
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    db.query(`SELECT * FROM users WHERE email = ?`, [email], async (err, results) => {
+        if (err) return res.status(500).json({ message: "Database error", err });
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Email not found." });
+        }
+
+        try {
+            const otp = generateOTP();
+            otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };
+            await sendOTPForgotpassword(email, otp);
+            res.status(200).json({ message: "OTP sent to your email for password reset." });
+        } catch (error) {
+            res.status(500).json({ message: "Error sending OTP", error });
+        }
+    });
+};
+
+// Reset Password
+const resetPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!otp) return res.status(400).json({ message: "OTP is required" });
+    if (!newPassword) return res.status(400).json({ message: "New password is required" });
+
+    const storedOtp = otpStore[email];
+    if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
+        return res.status(400).json({ message: "Invalid or expired OTP." });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        db.query(
+            `UPDATE users SET password = ? WHERE email = ?`,
+            [hashedPassword, email],
+            (err) => {
+                if (err) return res.status(500).json({ message: "Database error", err });
+                delete otpStore[email];
+                res.status(200).json({ message: "Password reset successfully." });
+            }
+        );
+    } catch (error) {
+        res.status(500).json({ message: "Error resetting password", error });
+    }
+};
+
+
 
 // Login user
 const loginUser = (req, res) => {
@@ -210,9 +346,12 @@ const getProfile = (req, res) => {
 
 module.exports = {
     registerUser,
+    verifyOTP,
     loginUser,
     logoutUser,
     getProfile,
     updateUser,
     deleteUser,
+    forgotPassword,
+    resetPassword,
 };
