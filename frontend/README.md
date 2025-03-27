@@ -1,17 +1,15 @@
-CREATE DATABASE QGenie;
-
-USE QGenie;
-
 CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    phoneNumber BIGINT,
-    role ENUM('Admin', 'Teacher', 'Student') DEFAULT 'Student',
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    phoneNumber VARCHAR(12),
+    role VARCHAR(20) CHECK (role IN ('Admin', 'Teacher', 'Student')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE users ADD COLUMN username VARCHAR(255) NOT NULL AFTER id;
+
+
+
 
 INSERT INTO users (username, email, password, phoneNumber, role)
 VALUES 

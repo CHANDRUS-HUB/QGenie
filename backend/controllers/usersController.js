@@ -89,7 +89,7 @@ const registerUser = async (req, res) => {
     }
 
     // Check if user already exists
-    db.query(`SELECT * FROM users WHERE email = ?`, [email], async (err, results) => {
+    db.query(`SELECT * FROM users WHERE email = $1`, [email], async (err, results) => {
         if (err) return res.status(500).json({ message: "Database error", err });
         if (results.length > 0) {
             return res.status(400).json({ message: "Email already exists" });
@@ -119,7 +119,7 @@ const verifyOTP = async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         db.query(
-            `INSERT INTO users (username, email, password, phoneNumber, role) VALUES (?, ?, ?, ?, ?)`,
+            `INSERT INTO users (username, email, password, phoneNumber, role) VALUES ($1, $2, $3, $4, $5)`,
             [username, email, hashedPassword, phoneNumber, role],
             (err) => {
                 if (err) return res.status(500).json({ message: "Database error", err });
@@ -136,7 +136,7 @@ const verifyOTP = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
-    db.query(`SELECT * FROM users WHERE email = ?`, [email], async (err, results) => {
+    db.query(`SELECT * FROM users WHERE email = $1`, [email], async (err, results) => {
         if (err) return res.status(500).json({ message: "Database error", err });
         if (results.length === 0) {
             return res.status(404).json({ message: "Email not found." });
@@ -156,70 +156,129 @@ const forgotPassword = async (req, res) => {
 // Reset Password
 const resetPassword = async (req, res) => {
     const { email, otp, newPassword } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required" });
-    if (!otp) return res.status(400).json({ message: "OTP is required" });
-    if (!newPassword) return res.status(400).json({ message: "New password is required" });
+    const errors = [];
 
-    const storedOtp = otpStore[email];
-    if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
-        return res.status(400).json({ message: "Invalid or expired OTP." });
+    // Input validation
+    if (!email) {
+        errors.push("Email is required.");
+    }
+    if (!otp) {
+        errors.push("OTP is required.");
+    }
+    if (!newPassword) {
+        errors.push("New password is required.");
+    } else if (newPassword.length < 6 || !/\d/.test(newPassword)) {
+        errors.push("Password must be at least 6 characters long and contain at least one number.");
+    }
+
+    // If there are validation errors, return all of them
+    if (errors.length > 0) {
+        return res.status(400).json({ errors });
     }
 
     try {
+        // Ensure the provided email exists in the database
+        const userResult = await db.query(`SELECT * FROM users WHERE email = $1`, [email]);
+        if (userResult.rowCount === 0) {
+            return res.status(404).json({ message: "No user found with the provided email." });
+        }
+
+        // Validate OTP
+        const storedOtp = otpStore[email];
+        if (!storedOtp) {
+            return res.status(400).json({ message: "OTP not generated for this email." });
+        }
+        if (storedOtp.otp !== otp) {
+            return res.status(400).json({ message: "Invalid OTP." });
+        }
+        if (Date.now() > storedOtp.expiresAt) {
+            return res.status(400).json({ message: "OTP has expired." });
+        }
+
+        // Hash the new password securely
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        db.query(
-            `UPDATE users SET password = ? WHERE email = ?`,
-            [hashedPassword, email],
-            (err) => {
-                if (err) return res.status(500).json({ message: "Database error", err });
-                delete otpStore[email];
-                res.status(200).json({ message: "Password reset successfully." });
-            }
+
+        // Update the user's password
+        const updateResult = await db.query(
+            `UPDATE users SET password = $1 WHERE email = $2`,
+            [hashedPassword, email]
         );
+
+        // Confirm that the password was updated
+        if (updateResult.rowCount === 0) {
+            return res.status(500).json({ message: "Failed to update password. Please try again." });
+        }
+
+        // Clear OTP after successful password reset
+        delete otpStore[email];
+
+        res.status(200).json({ message: "Password reset successfully." });
     } catch (error) {
-        res.status(500).json({ message: "Error resetting password", error });
+        console.error("Error resetting password:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
     }
 };
+
 
 
 
 // Login user
-const loginUser = (req, res) => {
-    const { email, password } = req.body;
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    if (!email) return res.status(400).json({ message: "Email is required" });
-    if (!password) return res.status(400).json({ message: "Password is required" });
-
-    db.query(`SELECT * FROM users WHERE email = ?`, [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: "Database error", err });
-
-        // If email not found, show specific error
-        if (results.length === 0) {
-            return res.status(401).json({ message: "Email does not exist" });
+        // Validate email
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
         }
 
-        const user = results[0];
+        // Validate password
+        if (!password) {
+            return res.status(400).json({ message: "Password is required" });
+        }
 
-        // Compare passwords
+        // Sanitize and normalize email
+        const sanitizedEmail = email.trim().toLowerCase();
+
+        // Fetch user from database
+        const query = "SELECT * FROM users WHERE email = $1";
+        const { rows } = await db.query(query, [sanitizedEmail]);
+
+        // Check if email exists
+        if (rows.length === 0) {
+            return res.status(401).json({ message: "Invalid email" });
+        }
+
+        const user = rows[0];
+
+        // Compare password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ message: "Incorrect password" });
+            return res.status(401).json({ message: "Invalid password" });
         }
 
-        // Generate and set JWT token in HttpOnly cookie
+        // Generate JWT token
         const token = generateToken(user);
+
+        // Set HttpOnly cookie for better security
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV ===  "production" ? true : false,
+            secure: process.env.NODE_ENV === "production", // Use secure cookie in production
+            sameSite: "Strict", // Helps prevent CSRF attacks
             maxAge: 30 * 60 * 1000, // 30 minutes
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Login successful",
-            user: { id: user.id, role: user.role },
+            user: { id: user.id, email: user.email, role: user.role },
         });
-    });
+
+    } catch (error) {
+        console.error("Login error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
 };
+
 
 // Logout user
 const logoutUser = (req, res) => {
@@ -231,11 +290,12 @@ const logoutUser = (req, res) => {
 const updateUser = (req, res) => {
     const { id, username, phoneNumber, role, email } = req.body;
 
+    // Check if the user ID is provided
     if (!id) {
         return res.status(400).json({ message: "User ID is required to update the user." });
     }
 
-    // Custom validation logic
+    // Collect validation errors
     const errors = [];
 
     // Validate username (at least 3 characters and alphabets only)
@@ -254,8 +314,8 @@ const updateUser = (req, res) => {
     }
 
     // Validate role (only Admin, Teacher, Student allowed)
-    if (role && !["Admin", "Teacher", "Student"].includes(role)) {
-        errors.push("Invalid role. Allowed values: Admin, Teacher, Student.");
+    if (role && !["Admin", "Teacher"].includes(role)) {
+        errors.push("Invalid role. Allowed values: Admin, Teacher.");
     }
 
     // Return validation errors (if any)
@@ -266,78 +326,93 @@ const updateUser = (req, res) => {
     // Prepare dynamic SQL query for updating only provided fields
     const updates = [];
     const values = [];
+    let paramIndex = 1; // Start index for parameterized query
 
     if (username) {
-        updates.push("username = ?");
+        updates.push(`username = $${paramIndex++}`);
         values.push(username);
     }
 
     if (email) {
-        updates.push("email = ?");
+        updates.push(`email = $${paramIndex++}`);
         values.push(email);
     }
 
     if (phoneNumber) {
-        updates.push("phoneNumber = ?");
+        updates.push(`phoneNumber = $${paramIndex++}`);
         values.push(phoneNumber);
     }
 
     if (role) {
-        updates.push("role = ?");
+        updates.push(`role = $${paramIndex++}`);
         values.push(role);
     }
 
     // Ensure at least one field is provided for update
     if (updates.length === 0) {
-        return res.status(400).json({ message: "At least one field (username, email, phoneNumber, role) is required to update." });
+        return res.status(400).json({
+            message: "At least one field (username, email, phoneNumber, role) is required to update.",
+        });
     }
 
-    // Finalize query and values array
-    const query = `UPDATE users SET ${updates.join(", ")} WHERE id = ?`;
+    // Finalize query and values array (add ID at the end)
+    const query = `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramIndex}`;
     values.push(id);
 
     // Execute database query
     db.query(query, values, (err, result) => {
         if (err) {
-            // Handle duplicate email error
-            if (err.code === "ER_DUP_ENTRY") {
+            // Handle duplicate email error (PostgreSQL specific)
+            if (err.code === "23505") {
                 return res.status(400).json({ message: "Email already in use by another user." });
             }
-            return res.status(500).json({ message: "Database error", err });
+            return res.status(500).json({ message: "Database error", error: err.message });
         }
 
         // Handle case where no rows were updated (invalid ID)
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: "User not found with the provided ID." });
         }
 
-        res.json({ message: "User updated successfully" });
+        res.status(200).json({ message: "User updated successfully." });
     });
 };
+
 
 // Delete user
 const deleteUser = (req, res) => {
     const { id } = req.body;
 
+    // Validate ID
     if (!id) {
         return res.status(400).json({ message: "User ID is required to delete the user." });
     }
 
-    db.query(`DELETE FROM users WHERE id = ?`, [id], (err, result) => {
+    // Ensure ID is a number (basic validation)
+    const userId = parseInt(id, 10);
+    if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format." });
+    }
+
+    // Query to delete the user
+    db.query(`DELETE FROM users WHERE id = $1`, [userId], (err, result) => {
         if (err) {
-            return res.status(500).json({ message: "Database error", err });
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Database error", error: err.message });
         }
 
-        // Handle case where no rows were deleted (invalid ID)
-        if (result.affectedRows === 0) {
+        // If no user was deleted, handle non-existent ID
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: "User not found with the provided ID." });
         }
 
-        // Clear the token cookie after user deletion
+        // Clear the auth token cookie (optional)
         res.clearCookie("token");
-        res.json({ message: "User deleted successfully and token cleared." });
+
+        res.status(200).json({ message: "User deleted successfully and token cleared." });
     });
 };
+
 
 // Get user profile (protected route)
 const getProfile = (req, res) => {

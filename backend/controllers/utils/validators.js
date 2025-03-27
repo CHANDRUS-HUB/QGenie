@@ -15,8 +15,8 @@ const validateUserInput = (username, email,password, phoneNumber, role) => {
         errors.push("Phone number must be exactly 12 digits.");
     }
 
-    if (role && !["Admin", "Teacher", "Student"].includes(role)) {
-        errors.push("Invalid role. Allowed values: Admin, Teacher, Student.");
+    if (role && !["Admin", "Teacher"].includes(role)) {
+        errors.push("Invalid role. Allowed values: Admin, Teacher.");
     }
 
     return errors;
