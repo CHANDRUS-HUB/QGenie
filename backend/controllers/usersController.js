@@ -76,11 +76,11 @@ const otpStore = {};
 const registerUser = async (req, res) => {
     const { username, email, password, phoneNumber, role } = req.body;
 
-    if(!username) return res.status(400).json({ message: "Username is required" });
-    if(!email) return res.status(400).json({ message: "Email is required" });
-    if(!password) return res.status(400).json({ message: "Password is required" });
-    if(!phoneNumber) return res.status(400).json({ message: "Phone Number is required" });
-    if(!role) return res.status(400).json({ message: "Role is required" });
+    if (!username) return res.status(400).json({ message: "Username is required" });
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!password) return res.status(400).json({ message: "Password is required" });
+    if (!phoneNumber) return res.status(400).json({ message: "Phone Number is required" });
+    if (!role) return res.status(400).json({ message: "Role is required" });
 
     // Validate user input
     const errors = validateUserInput(username, email, password, phoneNumber, role);
@@ -90,8 +90,9 @@ const registerUser = async (req, res) => {
 
     // Check if user already exists
     db.query(`SELECT * FROM users WHERE email = $1`, [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: "Database error", err });
-        if (results.length > 0) {
+        if (err) return res.status(500).json({ message: "Database error", error: err });
+
+        if (results.rows.length > 0) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
@@ -102,6 +103,7 @@ const registerUser = async (req, res) => {
             await sendOTPEmail(email, otp);
             res.status(200).json({ message: "OTP sent to email for verification." });
         } catch (error) {
+            console.error("Error sending OTP:", error);
             res.status(500).json({ message: "Error sending OTP", error });
         }
     });
