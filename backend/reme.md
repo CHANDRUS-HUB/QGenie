@@ -65,6 +65,10 @@ CREATE TABLE books (
     UNIQUE (user_id, original_name),            -- Ensure unique file name for each user
     UNIQUE (content_hash)                       -- Ensure no duplicate file content
 );
+ALTER TABLE books DROP CONSTRAINT books_content_hash_key;
+
+-- Ensure uniqueness only per user
+ALTER TABLE books ADD CONSTRAINT unique_user_book UNIQUE (user_id, content_hash);
 
 -- Ensure Unique Combination of User and Content Hash
 ALTER TABLE books DROP CONSTRAINT IF EXISTS unique_user_book;
@@ -248,3 +252,9 @@ DELETE FROM books WHERE book_id = 1;
 
 -- Truncate All Tables with Cascade
 TRUNCATE users, books, book_actions, chapters, topics, sub_topics RESTART IDENTITY CASCADE;
+
+--to find the crt name in table
+SELECT conname
+FROM pg_constraint
+WHERE conrelid = 'books'::regclass
+AND contype = 'u';

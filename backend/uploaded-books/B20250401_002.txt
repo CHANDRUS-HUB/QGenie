@@ -1,0 +1,66 @@
+ {
+      "issuedTo": {
+        "commonName": "*.google.com",
+        "organization": "Unknown"
+      },
+      "issuedBy": {
+        "commonName": "WE2",
+        "organization": "Google Trust Services"
+      },
+      "_id": "67ced130303db5b71d57488e",
+      "sslId": 1,
+      "url": "https://workspace.google.com",
+      "validFrom": "2025-02-26T15:33:03.000Z",
+      "validTo": "2025-05-21T15:33:02.000Z",
+      "siteManager": "dhush",
+      "email": "dhushyandan302002@gmail.com",
+      "emailLogs": [
+        {
+          "_id": "67ced158303db5b71d5748a3",
+          "sslId": 1,
+          "emailType": "30days",
+          "recipient": "dhushyandan302002@gmail.com",
+          "subject": "SSL Certificate Details for https://workspace.google.com",
+          "status": "success",
+          "sslDetails": "67ced130303db5b71d57488e",
+          "sentAt": "2025-03-10T11:47:36.652Z",
+          "createdAt": "2025-03-10T11:47:36.653Z",
+          "updatedAt": "2025-03-10T11:47:36.653Z",
+          "__v": 0
+        }
+      ],
+      "createdAt": "2025-03-10T11:46:56.123Z",
+      "updatedAt": "2025-03-10T11:47:36.659Z",
+      "__v": 1,
+      "emailSchedule": {
+        "nextEmailDates": {
+          "thirtyDays": "2025-04-21T15:33:02.000Z",
+          "fifteenDays": "2025-05-06T15:33:02.000Z",
+          "tenDays": "2025-05-11T15:33:02.000Z",
+          "fiveDays": "2025-05-16T15:33:02.000Z",
+          "daily": "2025-05-16T15:33:02.000Z"
+        },
+        "emailsSent": {
+          "thirtyDays": false,
+          "fifteenDays": false,
+          "tenDays": false,
+          "fiveDays": false,
+          "dailySentCount": 0
+        },
+        "_id": "67ced130303db5b71d574890",
+        "sslId": 1,
+        "notificationsEnabled": true,
+        "ssl": "67ced130303db5b71d57488e",
+        "createdAt": "2025-03-10T11:46:56.129Z",
+        "updatedAt": "2025-03-10T11:46:56.129Z",
+        "__v": 0
+      },
+      "daysRemaining": 72,
+      "notificationStatus": {
+        "thirtyDaysSent": false,
+        "fifteenDaysSent": false,
+        "tenDaysSent": false,
+        "fiveDaysSent": false,
+        "dailyEmailCount": 0
+      }
+    }
