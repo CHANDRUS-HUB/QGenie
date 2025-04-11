@@ -2,25 +2,22 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const multer = require("multer");
-const pool = require("../models/db");
+const axios = require("axios");
+const  Book  = require("../models/book"); // Sequelize model
+const Chapter = require("../models/chapters"); // Sequelize model
+const Topic=require('../models/topics')
 
-// Set upload directory path
 const uploadDir = path.join(__dirname, "../uploaded-books/");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Ensure the upload directory exists
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure Multer (File Upload Middleware)
 const upload = multer({
     dest: uploadDir,
-    limits: { fileSize: 25 * 1024 * 1024 }, // 20 MB file size limit
+    limits: { fileSize: 25 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = [
-            "application/pdf",                                    // PDF files
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX files
-            "text/plain",                                         // TXT files
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
         ];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
@@ -30,54 +27,77 @@ const upload = multer({
     },
 });
 
-
-// Generate a unique book name (BYYYYMMDD_001 format)
 const generateUniqueFileName = async (userId) => {
     const today = new Date();
-    const datePart = today.toISOString().split("T")[0].replace(/-/g, ""); // YYYYMMDD
+    const datePart = today.toISOString().split("T")[0].replace(/-/g, "");
 
-    // Count today's uploads for this user
-    const { rows } = await pool.query(
-        "SELECT COUNT(*) AS count FROM books WHERE user_id = $1 AND created_at::date = CURRENT_DATE",
-        [userId]
-    );
+    const count = await Book.count({
+        where: {
+            user_id: userId,
+            created_at: new Date().toISOString().split("T")[0],
+        },
+    });
 
-    const nextNumber = String(Number(rows[0].count) + 1).padStart(3, "0"); // 001, 002, etc.
+    const nextNumber = String(count + 1).padStart(3, "0");
     return `B${datePart}_${nextNumber}`;
 };
 
-// Compute SHA-256 hash for the uploaded file
 const calculateFileHash = (filePath) => {
     return new Promise((resolve, reject) => {
         const hash = crypto.createHash("sha256");
         const stream = fs.createReadStream(filePath);
-
         stream.on("data", (chunk) => hash.update(chunk));
         stream.on("end", () => resolve(hash.digest("hex")));
         stream.on("error", reject);
     });
 };
 
-// Upload Book Controller
+// const extractMetadataFromFile = async (filePath) => {
+//     try {
+//         const fileContent = fs.readFileSync(filePath, "utf-8");
+//         const response = await axios.post("http://localhost:11434", {
+//             model: "mistral",
+//             prompt: `Extract the chapters, topics and from the following content:\n\n${fileContent}`,
+//         });
+//         return response.data?.extractedMetadata || {};
+//     } catch (error) {
+//         console.error("Error extracting metadata using Ollama:", error);
+//         return {};
+//     }
+// };
+
+const ensureUniqueOriginalName = async (userId, originalName) => {
+    let counter = 1;
+    let uniqueName = originalName;
+
+    while (true) {
+        const existing = await Book.findOne({
+            where: { user_id: userId, original_name: uniqueName },
+        });
+        if (!existing) break;
+
+        const ext = path.extname(originalName);
+        const base = path.basename(originalName, ext);
+        uniqueName = `${base}_${counter}${ext}`;
+        counter++;
+    }
+
+    return uniqueName;
+};
+
 const uploadBook = async (req, res) => {
-    // Use Multer upload and handle errors
     upload.single("file")(req, res, async (err) => {
         if (err) {
-            if (err instanceof multer.MulterError) {
-                if (err.code === "LIMIT_FILE_SIZE") {
-                    return res.status(400).json({ error: "File too large. Max size is 20 MB." });
-                }
-                return res.status(400).json({ error: "File upload error." });
-            } else if (err) {
-                return res.status(400).json({ error: err.message });
+            if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+                return res.status(400).json({ error: "File too large. Max size is 20 MB." });
             }
+            return res.status(400).json({ error: err.message });
         }
 
         try {
-            const { title, author, subject, class_name, medium } = req.body;
+            const { title, author, subject, class_name, medium ,total_chapters,metadata} = req.body;
             const userId = req.user.id;
 
-            // Validate required fields
             if (!req.file || !title) {
                 return res.status(400).json({ error: "File and title are required." });
             }
@@ -86,82 +106,50 @@ const uploadBook = async (req, res) => {
             const tempFilePath = req.file.path;
             const fileType = req.file.mimetype;
 
-            // Compute SHA-256 content hash for deduplication
             const contentHash = await calculateFileHash(tempFilePath);
 
-            // Check if the content already exists (across any user)
-            const { rows: existingBooks } = await pool.query(
-                "SELECT file_path, unique_name FROM books WHERE content_hash = $1",
-                [contentHash]
-            );
+            const existingBook = await Book.findOne({ where: { content_hash: contentHash } });
 
             let finalFilePath, uniqueFileName;
 
-            if (existingBooks.length > 0) {
-                // File already exists – reuse the stored path
-                finalFilePath = existingBooks[0].file_path;
-                uniqueFileName = existingBooks[0].unique_name;
-                fs.unlinkSync(tempFilePath); // Delete the uploaded temp file
+            if (existingBook) {
+                finalFilePath = existingBook.file_path;
+                uniqueFileName = existingBook.unique_name;
+                fs.unlinkSync(tempFilePath);
             } else {
-                // Generate a new unique filename
                 uniqueFileName = await generateUniqueFileName(userId);
-                const fileExtension = path.extname(originalName);
-                uniqueFileName += fileExtension;
+                const ext = path.extname(originalName);
+                uniqueFileName += ext;
                 finalFilePath = path.join(uploadDir, uniqueFileName);
-
-                // Move the file to the permanent directory
                 fs.renameSync(tempFilePath, finalFilePath);
             }
 
-            // Ensure unique original_name for the user
-            const ensureUniqueOriginalName = async (userId, originalName) => {
-                let counter = 1;
-                let uniqueName = originalName;
-
-                while (true) {
-                    const { rowCount } = await pool.query(
-                        "SELECT 1 FROM books WHERE user_id = $1 AND original_name = $2",
-                        [userId, uniqueName]
-                    );
-
-                    if (rowCount === 0) break;
-
-                    // If name exists, append a counter to make it unique
-                    const ext = path.extname(originalName);
-                    const base = path.basename(originalName, ext);
-                    uniqueName = `${base}_${counter}${ext}`;
-                    counter++;
-                }
-
-                return uniqueName;
-            };
-
-            // Ensure original name is unique for the current user
+            // const metadata = await extractMetadataFromFile(finalFilePath);
             const finalOriginalName = await ensureUniqueOriginalName(userId, originalName);
 
-            // Insert book record into the database
-            const insertQuery = `
-                INSERT INTO books (title, author, subject, class_name, medium, user_id, original_name, unique_name, file_path, file_type, content_hash)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-                ON CONFLICT (user_id, content_hash) DO NOTHING
-                RETURNING *;
-            `;
+            const [book, created] = await Book.findOrCreate({
+                where: {
+                    user_id: userId,
+                    content_hash: contentHash,
+                },
+                defaults: {
+                    title,
+                    author,
+                    subject,
+                    class_name,
+                    medium,
+                    total_chapters,
+                    user_id: userId,
+                    original_name: finalOriginalName,
+                    unique_name: uniqueFileName,
+                    file_path: finalFilePath,
+                    file_type: fileType,
+                    content_hash: contentHash,
+                    metadata,
+                },
+            });
 
-            const { rows } = await pool.query(insertQuery, [
-                title,
-                author,
-                subject,
-                class_name,
-                medium,
-                userId,
-                finalOriginalName,
-                uniqueFileName,
-                finalFilePath,
-                fileType,
-                contentHash,
-            ]);
-
-            if (rows.length === 0) {
+            if (!created) {
                 return res.status(200).json({
                     message: "Duplicate book detected. Using existing record.",
                 });
@@ -169,7 +157,7 @@ const uploadBook = async (req, res) => {
 
             res.status(201).json({
                 message: "Book uploaded successfully.",
-                book: rows[0],
+                book,
             });
 
         } catch (error) {
@@ -178,7 +166,151 @@ const uploadBook = async (req, res) => {
         }
     });
 };
+//get all books in the data base with chapters and topics
+const getAllBooks = async (req, res) => {
+    try {
+      const books = await Book.findAll({
+        include: [
+          {
+            model: Chapter,
+            include: [Topic],
+          },
+        ],
+      });
+  
+      res.status(200).json({ books });
+    } catch (error) {
+      console.error("Error fetching all books:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  
+//get all books by user id where the user uploaded books with chapters with topics
+const getBooksByUserId = async (req, res) => {
+    try {
+      const userId = req.user.id;
+  
+      const books = await Book.findAll({
+        where: { user_id: userId },
+        include: [
+          {
+            model: Chapter,
+            include: [Topic],
+          },
+        ],
+      });
+  
+      res.status(200).json({ books });
+    } catch (error) {
+      console.error("Error fetching books by user ID:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  
+//chapter entry
 
+const chapterEntry = async (req, res) => {
+    try {
+      const { book_id, chapter_name, total_Topics } = req.body;
+  
+      if (!book_id) {
+        return res.status(400).json({ error: "book_id is required" });
+      }
+      if (!chapter_name) {
+        return res.status(400).json({ error: "chapter_name is required" });
+      }
+  
+      const book = await Book.findByPk(book_id);
+      if (!book) {
+        return res.status(404).json({ error: "Book not found for the given book_id" });
+      }
+  
+      // Find the highest chapter_id for the book
+      const lastChapter = await Chapter.findOne({
+        where: { book_id },
+        order: [['chapter_id', 'DESC']],
+      });
+  
+      const nextChapterId = lastChapter ? lastChapter.chapter_id + 1 : 1;
+  
+      const chapter = await Chapter.create({
+        book_id,
+        chapter_id: nextChapterId,
+        chapter_name,
+        total_Topics,
+      });
+  
+      res.status(201).json({
+        message: "Chapter entry created successfully.",
+        chapter_id: nextChapterId,
+        chapter,
+      });
+  
+    } catch (error) {
+      console.error("Error creating chapter entry:", error);
+      res.status(500).json({
+        error: "Something went wrong while creating the chapter.",
+        details: error.message || error,
+      });
+    }
+  };
+  
 
+  //topic entry
 
-module.exports = {  uploadBook };
+  const topicEntry = async (req, res) => {
+    try {
+      const { book_id, chapter_id, topic_name } = req.body;
+  
+      // Individual field checks
+      if (!book_id) {
+        return res.status(400).json({ error: "book_id is required" });
+      }
+      if (!chapter_id) {
+        return res.status(400).json({ error: "chapter_id is required" });
+      }
+      if (!topic_name) {
+        return res.status(400).json({ error: "topic_name is required" });
+      }
+  
+      // Check if chapter exists
+      const chapter = await Chapter.findOne({
+        where: { book_id, chapter_id },
+      });
+  
+      if (!chapter) {
+        return res.status(404).json({ error: "Chapter not found for the given book_id and chapter_id" });
+      }
+  
+      // Get the highest topic_id for this chapter
+      const lastTopic = await Topic.findOne({
+        where: { book_id, chapter_id },
+        order: [['topic_id', 'DESC']],
+      });
+  
+      const nextTopicId = lastTopic ? lastTopic.topic_id + 1 : 1;
+  
+      const topic = await Topic.create({
+        book_id,
+        chapter_id,
+        topic_id: nextTopicId,
+        topic_name,
+      });
+  
+      res.status(201).json({
+        message: "Topic entry created successfully.",
+        topic_id: nextTopicId,
+        topic,
+      });
+  
+    } catch (error) {
+      console.error("Error creating topic entry:", error.message);
+      res.status(500).json({
+        error: "Something went wrong while creating the topic.",
+        details: error.message,
+      });
+    }
+  };
+  
+  
+  module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId,topicEntry };

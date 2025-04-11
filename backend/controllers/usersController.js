@@ -1,7 +1,7 @@
 // controllers/usersController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const db = require("../models/db");
+const User = require("../models/users");
 const nodemailer = require("nodemailer");
 const { validateUserInput } = require("./utils/validators");
 
@@ -88,25 +88,19 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ message: "Validation failed", errors });
     }
 
-    // Check if user already exists
-    db.query(`SELECT * FROM users WHERE email = $1`, [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: "Database error", error: err });
+    try {
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
-        if (results.rows.length > 0) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
+        const otp = generateOTP();
+        otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };// 10 minutes expiration
+        await sendOTPEmail(email, otp);
 
-        try {
-            // Send OTP for email verification
-            const otp = generateOTP();
-            otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 }; // OTP valid for 10 mins
-            await sendOTPEmail(email, otp);
-            res.status(200).json({ message: "OTP sent to email for verification." });
-        } catch (error) {
-            console.error("Error sending OTP:", error);
-            res.status(500).json({ message: "Error sending OTP", error });
-        }
-    });
+        res.status(200).json({ message: "OTP sent to email for verification." });
+    } catch (err) {
+        res.status(500).json({ message: "Database error", error: err.message });
+    }
+   
 };
 
 // Verify OTP and save user
@@ -120,15 +114,9 @@ const verifyOTP = async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        db.query(
-            `INSERT INTO users (username, email, password, phoneNumber, role) VALUES ($1, $2, $3, $4, $5)`,
-            [username, email, hashedPassword, phoneNumber, role],
-            (err) => {
-                if (err) return res.status(500).json({ message: "Database error", err });
-                delete otpStore[email]; // Clear OTP after successful registration
-                res.status(201).json({ message: "User registered successfully." });
-            }
-        );
+        await User.create({ username, email, password: hashedPassword, phoneNumber, role });
+        delete otpStore[email];
+        res.status(201).json({ message: "User registered successfully." });
     } catch (error) {
         res.status(500).json({ message: "Error saving user", error });
     }
@@ -138,23 +126,19 @@ const verifyOTP = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
-    db.query(`SELECT * FROM users WHERE email = $1`, [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: "Database error", err });
-        if (results.length === 0) {
-            return res.status(404).json({ message: "Email not found." });
-        }
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) return res.status(404).json({ message: "Email not found." });
 
-        try {
-            const otp = generateOTP();
-            otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };
-            await sendOTPForgotpassword(email, otp);
-            res.status(200).json({ message: "OTP sent to your email for password reset." });
-        } catch (error) {
-            res.status(500).json({ message: "Error sending OTP", error });
-        }
-    });
+        const otp = generateOTP();
+        otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };
+        await sendOTPForgotpassword(email, otp);
+
+        res.status(200).json({ message: "OTP sent to your email for password reset." });
+    } catch (err) {
+        res.status(500).json({ message: "Error sending OTP", error: err.message });
+    }
 };
-
 // Reset Password
 const resetPassword = async (req, res) => {
     const { email, otp, newPassword } = req.body;
@@ -179,41 +163,17 @@ const resetPassword = async (req, res) => {
     }
 
     try {
-        // Ensure the provided email exists in the database
-        const userResult = await db.query(`SELECT * FROM users WHERE email = $1`, [email]);
-        if (userResult.rowCount === 0) {
-            return res.status(404).json({ message: "No user found with the provided email." });
-        }
+        const user = await User.findOne({ where: { email } });
+        if (!user) return res.status(404).json({ message: "No user found with the provided email." });
 
-        // Validate OTP
         const storedOtp = otpStore[email];
-        if (!storedOtp) {
-            return res.status(400).json({ message: "OTP not generated for this email." });
+        if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
+            return res.status(400).json({ message: "Invalid or expired OTP." });
         }
-        if (storedOtp.otp !== otp) {
-            return res.status(400).json({ message: "Invalid OTP." });
-        }
-        if (Date.now() > storedOtp.expiresAt) {
-            return res.status(400).json({ message: "OTP has expired." });
-        }
-
         // Hash the new password securely
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Update the user's password
-        const updateResult = await db.query(
-            `UPDATE users SET password = $1 WHERE email = $2`,
-            [hashedPassword, email]
-        );
-
-        // Confirm that the password was updated
-        if (updateResult.rowCount === 0) {
-            return res.status(500).json({ message: "Failed to update password. Please try again." });
-        }
-
-        // Clear OTP after successful password reset
+        await User.update({ password: hashedPassword }, { where: { email } });
         delete otpStore[email];
-
         res.status(200).json({ message: "Password reset successfully." });
     } catch (error) {
         console.error("Error resetting password:", error);
@@ -226,7 +186,7 @@ const resetPassword = async (req, res) => {
 
 // Login user
 const loginUser = async (req, res) => {
-    try {
+   
         const { email, password } = req.body;
 
         // Validate email
@@ -239,46 +199,28 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: "Password is required" });
         }
 
-        // Sanitize and normalize email
-        const sanitizedEmail = email.trim().toLowerCase();
-
-        // Fetch user from database
-        const query = "SELECT * FROM users WHERE email = $1";
-        const { rows } = await db.query(query, [sanitizedEmail]);
-
-        // Check if email exists
-        if (rows.length === 0) {
-            return res.status(401).json({ message: "Invalid email" });
+        try {
+            const user = await User.findOne({ where: { email: email.trim().toLowerCase() } });
+            if (!user) return res.status(401).json({ message: "Invalid email" });
+    
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) return res.status(401).json({ message: "Invalid password" });
+    
+            const token = generateToken(user);
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "Strict",
+                maxAge: 30 * 60 * 1000,
+            });
+    
+            res.status(200).json({
+                message: "Login successful",
+                user: { id: user.id, email: user.email, role: user.role },
+            });
+        } catch (error) {
+            res.status(500).json({ message: "Internal server error" });
         }
-
-        const user = rows[0];
-
-        // Compare password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: "Invalid password" });
-        }
-
-        // Generate JWT token
-        const token = generateToken(user);
-
-        // Set HttpOnly cookie for better security
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // Use secure cookie in production
-            sameSite: "Strict", // Helps prevent CSRF attacks
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        });
-
-        return res.status(200).json({
-            message: "Login successful",
-            user: { id: user.id, email: user.email, role: user.role },
-        });
-
-    } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
 };
 
 
@@ -289,132 +231,61 @@ const logoutUser = (req, res) => {
 };
 
 // Update user
-const updateUser = (req, res) => {
+const updateUser = async (req, res) => {
     const { id, username, phoneNumber, role, email } = req.body;
 
-    // Check if the user ID is provided
-    if (!id) {
-        return res.status(400).json({ message: "User ID is required to update the user." });
-    }
+    if (!id) return res.status(400).json({ message: "User ID is required" });
 
-    // Collect validation errors
     const errors = [];
-
-    // Validate username (at least 3 characters and alphabets only)
-    if (username && (!/^[A-Za-z]+$/.test(username) || username.trim().length < 3)) {
+    if (username && (!/^[A-Za-z]+$/.test(username) || username.length < 3)) {
         errors.push("Username must be at least 3 characters long and contain only alphabets.");
     }
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) errors.push("Invalid email format.");
+    if (phoneNumber && !/^\d{12}$/.test(phoneNumber)) errors.push("Phone number must be 12 digits.");
+    if (role && !["Admin", "Teacher"].includes(role)) errors.push("Invalid role.");
 
-    // Validate email format
-    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-        errors.push("Invalid email format.");
-    }
+    if (errors.length > 0) return res.status(400).json({ message: "Validation failed", errors });
 
-    // Validate phoneNumber (exactly 12 digits)
-    if (phoneNumber && !/^\d{12}$/.test(phoneNumber)) {
-        errors.push("Phone number must be exactly 12 digits.");
-    }
+    const updatedFields = {};
+    if (username) updatedFields.username = username;
+    if (email) updatedFields.email = email;
+    if (phoneNumber) updatedFields.phoneNumber = phoneNumber;
+    if (role) updatedFields.role = role;
 
-    // Validate role (only Admin, Teacher, Student allowed)
-    if (role && !["Admin", "Teacher"].includes(role)) {
-        errors.push("Invalid role. Allowed values: Admin, Teacher.");
-    }
-
-    // Return validation errors (if any)
-    if (errors.length > 0) {
-        return res.status(400).json({ message: "Validation failed", errors });
-    }
-
-    // Prepare dynamic SQL query for updating only provided fields
-    const updates = [];
-    const values = [];
-    let paramIndex = 1; // Start index for parameterized query
-
-    if (username) {
-        updates.push(`username = $${paramIndex++}`);
-        values.push(username);
-    }
-
-    if (email) {
-        updates.push(`email = $${paramIndex++}`);
-        values.push(email);
-    }
-
-    if (phoneNumber) {
-        updates.push(`phoneNumber = $${paramIndex++}`);
-        values.push(phoneNumber);
-    }
-
-    if (role) {
-        updates.push(`role = $${paramIndex++}`);
-        values.push(role);
-    }
-
-    // Ensure at least one field is provided for update
-    if (updates.length === 0) {
-        return res.status(400).json({
-            message: "At least one field (username, email, phoneNumber, role) is required to update.",
-        });
-    }
-
-    // Finalize query and values array (add ID at the end)
-    const query = `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramIndex}`;
-    values.push(id);
-
-    // Execute database query
-    db.query(query, values, (err, result) => {
-        if (err) {
-            // Handle duplicate email error (PostgreSQL specific)
-            if (err.code === "23505") {
-                return res.status(400).json({ message: "Email already in use by another user." });
-            }
-            return res.status(500).json({ message: "Database error", error: err.message });
-        }
-
-        // Handle case where no rows were updated (invalid ID)
-        if (result.rowCount === 0) {
+    try {
+        const [updatedCount] = await User.update(updatedFields, { where: { id } });
+        if (updatedCount === 0) {
             return res.status(404).json({ message: "User not found with the provided ID." });
         }
-
         res.status(200).json({ message: "User updated successfully." });
-    });
+    } catch (err) {
+        if (err.name === "SequelizeUniqueConstraintError") {
+            return res.status(400).json({ message: "Email already in use." });
+        }
+        res.status(500).json({ message: "Database error", error: err.message });
+    }
 };
 
 
 // Delete user
-const deleteUser = (req, res) => {
+const deleteUser = async (req, res) => {
     const { id } = req.body;
 
-    // Validate ID
-    if (!id) {
-        return res.status(400).json({ message: "User ID is required to delete the user." });
+    if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({ message: "Valid user ID is required" });
     }
 
-    // Ensure ID is a number (basic validation)
-    const userId = parseInt(id, 10);
-    if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID format." });
-    }
-
-    // Query to delete the user
-    db.query(`DELETE FROM users WHERE id = $1`, [userId], (err, result) => {
-        if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).json({ message: "Database error", error: err.message });
+    try {
+        const deleted = await User.destroy({ where: { id } });
+        if (!deleted) {
+            return res.status(404).json({ message: "User not found" });
         }
-
-        // If no user was deleted, handle non-existent ID
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: "User not found with the provided ID." });
-        }
-
-        // Clear the auth token cookie (optional)
         res.clearCookie("token");
-
         res.status(200).json({ message: "User deleted successfully and token cleared." });
-    });
+    } catch (err) {
+        res.status(500).json({ message: "Database error", error: err.message });
+    }
 };
-
 
 // Get user profile (protected route)
 const getProfile = (req, res) => {

@@ -3,7 +3,10 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const userRoutes = require("./router/userRoute");
-require("./models/db");
+const bookRouters = require("./router/bookRoute");
+
+//database connection
+const sequelize = require("./models/db");
 
 dotenv.config();
 
@@ -14,8 +17,16 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cookieParser());
 
+
+
+// Sync the database
+sequelize.sync({ alter: true })
+  .then(() => console.log("Database & tables synced!"))
+  .catch((err) => console.error("Database sync error:", err));
+
+
 // Routes
-app.use("/", userRoutes);
+app.use("/", userRoutes,bookRouters);
 
 app.listen(port, () => {
     console.log(`Server running on ${port}`);
