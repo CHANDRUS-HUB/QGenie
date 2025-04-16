@@ -29,7 +29,7 @@ const routes = [
     component: Welcome, // view rendered
   },
   {
-    path: '/leads',
+    path: '/Q&A-Generation',
     component: Leads,
   },
   {

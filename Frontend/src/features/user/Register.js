@@ -1,24 +1,41 @@
 import { useState, useRef } from 'react'
 import axios from 'axios';
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LandingIntro from './LandingIntro'
 import ErrorText from '../../components/Typography/ErrorText'
 import InputText from '../../components/Input/InputText'
 import baseUrl from '../../utils/URL'
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { toast, Toaster } from 'react-hot-toast'
+// import { showNotification } from "../common/headerSlice"
+// import { useDispatch } from 'react-redux';
+
 
 function Register() {
+
 
     const INITIAL_REGISTER_OBJ = {
         name: "",
         password: "",
         phoneNumber: "",
-        role: "Student",
+        role: "Teacher",
         emailId: ""
     }
 
     const [loading, setLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [registerObj, setRegisterObj] = useState(INITIAL_REGISTER_OBJ)
+    const [showPassword, setShowPassword] = useState(false);
+    // const dispatch = useDispatch()
+    const navigate = useNavigate();
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    // const handleclick = () => {
+    //     console.log("clicked")
+    //     toast.success("Registered successfully")
+    // }
 
     const submitForm = async (e) => {
         e.preventDefault();
@@ -33,31 +50,41 @@ function Register() {
             return setErrorMessage("Email Id is not valid");
         }
         if (registerObj.password.trim() === "") return setErrorMessage("Password is required!");
-        if (registerObj.phoneNumber.trim() === "") return setErrorMessage("Phone Number is required!");
-        //phone number is 12 digit and only numbers
-        else if (!registerObj.phoneNumber.match(/^\d{12}$/)) {
-            return setErrorMessage("Phone number is not valid");
+        // password must be atleast 6 characters long
+        else if (registerObj.password.length < 6) {
+            return setErrorMessage("Password must be atleast 6 characters long");
         }
-        
+        // if (registerObj.phoneNumber.trim() === "") return setErrorMessage("Phone Number is required!");
+        // //phone number is 12 digit and only numbers
+        // else if (!registerObj.phoneNumber.match(/^\d{12}$/)) {
+        //     return setErrorMessage("Phone number is not valid");
+        // }
+
 
         try {
-            setLoading(true);
 
-            const response = await axios.post(`${baseUrl}/register`, {
+
+            const response = await axios.post(`${baseUrl}/verify-otp`, {
                 username: registerObj.name,
                 email: registerObj.emailId,
                 password: registerObj.password,
-                phoneNumber: registerObj.phoneNumber,
+                // phoneNumber: registerObj.phoneNumber,
                 role: registerObj.role
 
             }, { withCredentials: true });
 
-            if (response.data.message.includes("OTP")) {
-                // Redirect to OTP page (e.g. /verify-otp?email=xyz)
-                window.location.href = `/verify-otp?email=${registerObj.emailId}`;
+            if (response.data.message) {
+                //  dispatch( showNotification({ message: "resgistered successfully", status: 1 }))
+                toast.success("Registered successfully")
+                // setTimeout(() => {
+                    navigate('/login');
+                // }, 1000);
             }
+            setLoading(true);
         } catch (error) {
             setErrorMessage(error.response?.data?.message || "Registration failed");
+            // dispatch(showNotification({ message:error.response?.data?.message, status: 0 }))
+            toast.error(error.response?.data?.message || "Registration failed")
         } finally {
             setLoading(false);
         }
@@ -81,8 +108,8 @@ function Register() {
 
                             <div className="mb-4">
 
-                                <InputText defaultValue={registerObj.name} updateType="name" containerStyle="mt-4" labelTitle="Name" updateFormValue={updateFormValue} Oncustomchange={(e) => {
-                                    const newName = e.target.value; // ✅ Fix: Get the actual typed value
+                                <InputText value={registerObj.name} updateType="name" containerStyle="mt-4" labelTitle="Name" updateFormValue={updateFormValue} Oncustomchange={(e) => {
+                                    const newName = e.target.value;
 
                                     // Update state
                                     updateFormValue({ updateType: "name", value: newName });
@@ -96,8 +123,8 @@ function Register() {
                                         setErrorMessage(""); // Clear error if valid
                                     }
                                 }} />
-                              
-                                <InputText defaultValue={registerObj.emailId} updateType="emailId" containerStyle="mt-4" labelTitle="Email Id" updateFormValue={updateFormValue} Oncustomchange={ (e)=> {
+
+                                <InputText value={registerObj.emailId} updateType="emailId" containerStyle="mt-4" labelTitle="Email Id" updateFormValue={updateFormValue} Oncustomchange={(e) => {
                                     const newEmail = e.target.value; // ✅ Fix: Get the actual typed value
                                     // Update state
                                     updateFormValue({ updateType: "emailId", value: newEmail });
@@ -106,29 +133,57 @@ function Register() {
                                         setErrorMessage("Email is required!");
                                     } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(newEmail)) {
                                         setErrorMessage("Invalid email address");
-                                        } else {
+                                    } else {
                                         setErrorMessage(""); // Clear error if valid
                                     }
 
                                 }} />
+                                {/* 
+                                <InputText value={registerObj.phoneNumber} updateType="phoneNumber" containerStyle="mt-4" labelTitle="Phone Number" updateFormValue={updateFormValue} Oncustomchange={(e)=>{
 
-                                <InputText defaultValue={registerObj.phoneNumber} updateType="phoneNumber" containerStyle="mt-4" labelTitle="Phone Number" updateFormValue={updateFormValue} Oncustomchange={(e)=>{
+                                }} /> */}
 
-                                }} />
 
-                                <InputText defaultValue={registerObj.password} type="password" updateType="password" containerStyle="mt-4" labelTitle="Password" updateFormValue={updateFormValue} />
+                                <div className="relative mt-4">
+                                    <InputText
+                                        value={registerObj.password}
+                                        type={showPassword ? "text" : "password"}
+                                        updateType="password"
+                                        containerStyle="mt-4"
+                                        labelTitle="Password"
+                                        updateFormValue={updateFormValue}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 bottom-2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                                        onClick={togglePasswordVisibility}
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
 
                             </div>
 
                             <ErrorText styleClass="mt-8">{errorMessage}</ErrorText>
-                            <button type="submit" className={"btn mt-2 w-full btn-primary" + (loading ? " loading" : "")}>Register</button>
+
+
+
+                            <button type="submit" className={"btn mt-2 w-full btn-primary"}> {(loading ? " loading...." : "register")}</button>
 
                             <div className='text-center mt-4'>Already have an account? <Link to="/login"><span className="  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Login</span></Link></div>
                         </form>
+                        {/* <button onClick={handleclick}>dfljdskf</button> */}
                     </div>
                 </div>
             </div>
+            <Toaster
+                position="top-center"
+                reverseOrder={false}
+            />
         </div>
+
+
+
     )
 }
 

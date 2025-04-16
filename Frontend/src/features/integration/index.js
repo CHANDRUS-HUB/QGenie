@@ -30,6 +30,10 @@ function Integration(){
         dispatch(showNotification({message : `${integration.name} ${integration.isActive ? "disabled" : "enabled"}` , status : 1}))
     }
 
+    const Toast = () => {
+        dispatch(showNotification({message : "hiii", isActive : "enabled", status : 1 }))
+    }
+
 
     return(
         <>
@@ -46,12 +50,19 @@ function Integration(){
                             <div className="mt-6 text-right">
                                 <input type="checkbox" className="toggle toggle-success toggle-lg" checked={i.isActive} onChange={() => updateIntegrationStatus(k)}/>
                             </div>
+                           
                             
                         </TitleCard>
                     )
                 
                 })
+                
             }
+             <div>
+                            <button type="button"   onClick={() => Toast()}>  clikeme</button>
+                            </div>
+
+                            
             </div>
         </>
     )

@@ -1,8 +1,14 @@
 import {useState, useRef} from 'react'
-import {Link} from 'react-router-dom'
+import axios from 'axios';
+import {Link, useNavigate} from 'react-router-dom'
 import LandingIntro from './LandingIntro'
 import ErrorText from  '../../components/Typography/ErrorText'
 import InputText from '../../components/Input/InputText'
+import baseUrl from '../../utils/URL'
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+// import { showNotification } from "../common/headerSlice"
+// import { useDispatch } from 'react-redux';
+import { toast, Toaster } from 'react-hot-toast'
 
 function Login(){
 
@@ -14,19 +20,46 @@ function Login(){
     const [loading, setLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [loginObj, setLoginObj] = useState(INITIAL_LOGIN_OBJ)
+    const [showPassword, setShowPassword] = useState(false);
+    // const dispatch = useDispatch()
+    const navigate = useNavigate();
 
-    const submitForm = (e) =>{
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const submitForm = async (e) =>{
         e.preventDefault()
         setErrorMessage("")
 
-        if(loginObj.emailId.trim() === "")return setErrorMessage("Email Id is required! (use any value)")
-        if(loginObj.password.trim() === "")return setErrorMessage("Password is required! (use any value)")
-        else{
-            setLoading(true)
-            // Call API to check user credentials and save token in localstorage
-            localStorage.setItem("token", "DumyTokenHere")
-            setLoading(false)
-            window.location.href = '/app/welcome'
+        if(loginObj.emailId.trim() === "")return setErrorMessage("Email Id is required! ")
+
+        else if(!loginObj.emailId.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))return setErrorMessage("Email Id is not valid")
+
+        if(loginObj.password.trim() === "")return setErrorMessage("Password is required!")
+       try {
+           
+
+            const response = await axios.post(`${baseUrl}/login`, {
+               
+                email: loginObj.emailId,
+                password: loginObj.password,
+            }, { withCredentials: true });
+
+            if (response.data.message) {
+           toast.success(response.data.message)
+            //  setTimeout(() => {
+                navigate('/app/welcome');
+                window.location.href= "/app/welcome" ;
+            //   }, 500); 
+            }
+            setLoading(true);
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || "Login failed");
+           toast.error(error.response?.data?.message || "Login failed")
+            
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -48,10 +81,25 @@ function Login(){
 
                         <div className="mb-4">
 
-                            <InputText type="emailId" defaultValue={loginObj.emailId} updateType="emailId" containerStyle="mt-4" labelTitle="Email Id" updateFormValue={updateFormValue}/>
+                            <InputText type="emailId" value={loginObj.emailId} updateType="emailId" containerStyle="mt-4" labelTitle="Email Id" updateFormValue={updateFormValue}/>
 
-                            <InputText defaultValue={loginObj.password} type="password" updateType="password" containerStyle="mt-4" labelTitle="Password" updateFormValue={updateFormValue}/>
-
+                            <div className="relative mt-4">
+                                    <InputText 
+                                        value={loginObj.password}  
+                                        type={showPassword ? "text" : "password"} 
+                                        updateType="password" 
+                                        containerStyle="mt-4" 
+                                        labelTitle="Password" 
+                                        updateFormValue={updateFormValue}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        className="absolute right-3 bottom-2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                                        onClick={togglePasswordVisibility}
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
                         </div>
 
                         <div className='text-right text-primary'><Link to="/forgot-password"><span className="text-sm  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Forgot Password?</span></Link>
@@ -65,6 +113,7 @@ function Login(){
                 </div>
             </div>
             </div>
+            <Toaster />
         </div>
     )
 }
