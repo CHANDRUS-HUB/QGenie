@@ -34,7 +34,11 @@ function Leads(){
         dispatch(getLeadsContent())
     }, [])
 
-    
+        const difficultyOptions = [
+        { label: "Easy", color: "bg-green-100 border-green-400" },
+        { label: "Medium", color: "bg-yellow-100 border-yellow-400" },
+        { label: "Hard", color: "bg-red-100 border-red-400" },
+    ]
 
     const getDummyStatus = (index) => {
         if(index % 5 === 0)return <div className="badge">Not Interested</div>
@@ -58,8 +62,9 @@ function Leads(){
     const [topic, setTopic] = useState("")
     const [type, setType] = useState("Objective")
     const [difficulty, setDifficulty] = useState("Easy")
-    const [numQuestions, setNumQuestions] = useState(5)
+   
     const [questionType, setQuestionType] = useState("Multiple Choice")
+    const [numQuestions, setNumQuestions] = useState({ Easy: 5, Medium: 5, Hard: 5 })
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0])
@@ -75,7 +80,6 @@ function Leads(){
     }
 
     const generateQuestionPaper = () => {
-        // Hook up logic here to handle API call or file parsing
         console.log({
             file,
             subject,
@@ -166,35 +170,36 @@ function Leads(){
             </select>
         </div>
 
-        {/* Difficulty Level Dropdown */}
+   
         <div>
-            <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700">Difficulty Level</label>
-            <select 
-                id="difficulty"
-                className="select select-bordered w-full" 
-                value={difficulty} 
-                onChange={(e) => setDifficulty(e.target.value)}
+    <label className="block text-sm font-medium text-gray-700 mb-2">Select Difficulty Level & Set Question Count</label>
+    <div className="flex flex-wrap gap-4">
+        {difficultyOptions.map((option) => (
+            <div
+                key={option.label}
+                className={`cursor-pointer  rounded-lg px-3 py-1 w-48 transition-all duration-200
+                    ${option.color}
+                   
+                `}
+                onClick={() => setDifficulty(option.label)}
             >
-                <option>Easy</option>
-                <option>Medium</option>
-                <option>Hard</option>
-            </select>
-        </div>
-
-        {/* Number of Questions Dropdown */}
-        <div>
-            <label htmlFor="numQuestions" className="block text-sm font-medium text-gray-700">Number of Questions</label>
-            <select 
-                id="numQuestions"
-                className="select select-bordered w-full" 
-                value={numQuestions} 
-                onChange={(e) => setNumQuestions(Number(e.target.value))}
-            >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-            </select>
-        </div>
+                <div className="text-center font-semibold mb-2">{option.label}</div>
+                <input
+                    type="number"
+                    min={1}
+                    value={numQuestions[option.label]}
+                    onClick={(e) => e.stopPropagation()} // prevent card from being selected when clicking input
+                    onChange={(e) => {
+                        const updated = { ...numQuestions, [option.label]: Number(e.target.value) }
+                        setNumQuestions(updated)
+                    }}
+                    className="input input-bordered w-full"
+                />
+                {/* <div className="text-xs text-gray-600 mt-1 text-center">Questions</div> */}
+            </div>
+        ))}
+    </div>
+</div>
         
     </div>
 
@@ -210,6 +215,160 @@ function Leads(){
 
 export default Leads
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// function Leads() {
+//     const { leads } = useSelector(state => state.lead)
+//     const dispatch = useDispatch()
+
+//     useEffect(() => {
+//         dispatch(getLeadsContent())
+//     }, [])
+
+//     const [file, setFile] = useState(null)
+//     const [subject, setSubject] = useState("")
+//     const [topic, setTopic] = useState("")
+//     const [type, setType] = useState("Objective")
+//     const [difficulty, setDifficulty] = useState("Easy")
+   
+//     const [questionType, setQuestionType] = useState("Multiple Choice")
+//     const [numQuestions, setNumQuestions] = useState({ Easy: 5, Medium: 5, Hard: 5 })
+
+//     const handleFileChange = (e) => {
+//         setFile(e.target.files[0])
+//     }
+
+//     const handleDrop = (e) => {
+//         e.preventDefault()
+//         setFile(e.dataTransfer.files[0])
+//     }
+
+//     const handleDragOver = (e) => {
+//         e.preventDefault()
+//     }
+
+//     const generateQuestionPaper = () => {
+//         console.log({
+//             file,
+//             subject,
+//             topic,
+//             type,
+//             difficulty,
+//             numQuestions,
+//             questionType
+//         })
+//         alert("Question Paper Generation Triggered!")
+//     }
+
+//     const difficultyOptions = [
+//         { label: "Easy", color: "bg-green-100 border-green-400" },
+//         { label: "Medium", color: "bg-yellow-100 border-yellow-400" },
+//         { label: "Hard", color: "bg-red-100 border-red-400" },
+//     ]
+
+//     return (
+//         <>
+//             <TitleCard title="Please select a file (Accepted types: .doc, .pdf, .txt)" topMargin="mt-6">
+//                 <div
+//                     className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition"
+//                     onDrop={handleDrop}
+//                     onDragOver={handleDragOver}
+//                 >
+//                     {file ? (
+//                         <div className="text-sm text-gray-600">File Uploaded: <strong>{file.name}</strong></div>
+//                     ) : (
+//                         <>
+//                             <InboxArrowDownIcon className="mx-auto h-12 w-12 text-gray-400" />
+//                             <p className="mt-2 text-sm text-gray-500">Drag & drop file here or</p>
+//                             <input type="file" className="mt-2" onChange={handleFileChange} />
+//                         </>
+//                     )}
+//                 </div>
+
+//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+//                     {/* Subject Input */}
+//                     <div>
+//                         <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject</label>
+//                         <input
+//                             id="subject"
+//                             type="text"
+//                             className="input input-bordered w-full"
+//                             placeholder="Subject"
+//                             value={subject}
+//                             onChange={(e) => setSubject(e.target.value)}
+//                         />
+//                     </div>
+
+//                     {/* Topic Input */}
+//                     <div>
+//                         <label htmlFor="topic" className="block text-sm font-medium text-gray-700">Topic</label>
+//                         <input
+//                             id="topic"
+//                             type="text"
+//                             className="input input-bordered w-full"
+//                             placeholder="Topic"
+//                             value={topic}
+//                             onChange={(e) => setTopic(e.target.value)}
+//                         />
+//                     </div>
+
+                
+                 
+//                     <div className="md:col-span-2">
+//     <label className="block text-sm font-medium text-gray-700 mb-2">Select Difficulty Level & Set Question Count</label>
+//     <div className="flex flex-wrap gap-4">
+//         {difficultyOptions.map((option) => (
+//             <div
+//                 key={option.label}
+//                 className={`cursor-pointer border rounded-lg px-3 py-1 w-48 transition-all duration-200
+//                     ${option.color}
+//                     ${difficulty === option.label ? "ring-2 ring-offset-2 ring-gray-600" : "opacity-90"}
+//                 `}
+//                 onClick={() => setDifficulty(option.label)}
+//             >
+//                 <div className="text-center font-semibold mb-2">{option.label}</div>
+//                 <input
+//                     type="number"
+//                     min={1}
+//                     value={numQuestions[option.label]}
+//                     onClick={(e) => e.stopPropagation()} // prevent card from being selected when clicking input
+//                     onChange={(e) => {
+//                         const updated = { ...numQuestions, [option.label]: Number(e.target.value) }
+//                         setNumQuestions(updated)
+//                     }}
+//                     className="input input-bordered w-full"
+//                 />
+//                 {/* <div className="text-xs text-gray-600 mt-1 text-center">Questions</div> */}
+//             </div>
+//         ))}
+//     </div>
+// </div>
+
+                 
+                  
+
+          
+//                 </div>
+
+//                 <button className="btn btn-primary mt-6" onClick={generateQuestionPaper}>Generate QP</button>
+//             </TitleCard>
+//         </>
+//     )
+// }
+
+// export default Leads
 
 
 

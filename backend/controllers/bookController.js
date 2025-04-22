@@ -6,6 +6,8 @@ const axios = require("axios");
 const  Book  = require("../models/book"); // Sequelize model
 const Chapter = require("../models/chapters"); // Sequelize model
 const Topic=require('../models/topics')
+const pdfParse = require("pdf-parse");
+require("dotenv").config();
 
 const uploadDir = path.join(__dirname, "../uploaded-books/");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -27,20 +29,44 @@ const upload = multer({
     },
 });
 
-const generateUniqueFileName = async (userId) => {
+const { Op } = require("sequelize");
+
+const generateUniqueFileName = async (userId, contentHash) => {
+    // 1. Check if user already uploaded this content before
+    const existing = await Book.findOne({
+        where: {
+            user_id: userId,
+            content_hash: contentHash,
+        },
+    });
+
+    if (existing) {
+        // If same user and same content, reuse unique name
+        return existing.unique_name;
+    }
+
+    // 2. Else: count total number of *unique* uploads today (global, not per user)
     const today = new Date();
     const datePart = today.toISOString().split("T")[0].replace(/-/g, "");
 
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
     const count = await Book.count({
         where: {
-            user_id: userId,
-            created_at: new Date().toISOString().split("T")[0],
+            created_at: {
+                [Op.between]: [startOfDay, endOfDay],
+            },
         },
     });
 
     const nextNumber = String(count + 1).padStart(3, "0");
-    return `B${datePart}_${nextNumber}`;
+    return `Q${datePart}_${nextNumber}`;
 };
+
 
 const calculateFileHash = (filePath) => {
     return new Promise((resolve, reject) => {
@@ -51,39 +77,78 @@ const calculateFileHash = (filePath) => {
         stream.on("error", reject);
     });
 };
-
-// const extractMetadataFromFile = async (filePath) => {
-//     try {
-//         const fileContent = fs.readFileSync(filePath, "utf-8");
-//         const response = await axios.post("http://localhost:11434", {
-//             model: "mistral",
-//             prompt: `Extract the chapters, topics and from the following content:\n\n${fileContent}`,
-//         });
-//         return response.data?.extractedMetadata || {};
-//     } catch (error) {
-//         console.error("Error extracting metadata using Ollama:", error);
-//         return {};
-//     }
-// };
-
-const ensureUniqueOriginalName = async (userId, originalName) => {
-    let counter = 1;
-    let uniqueName = originalName;
-
-    while (true) {
-        const existing = await Book.findOne({
-            where: { user_id: userId, original_name: uniqueName },
-        });
-        if (!existing) break;
-
-        const ext = path.extname(originalName);
-        const base = path.basename(originalName, ext);
-        uniqueName = `${base}_${counter}${ext}`;
-        counter++;
+const OpenAI = require("openai");
+const mammoth = require("mammoth");
+const openai = new OpenAI({
+  apiKey: '',
+});
+const extractMetadataFromFile = async (filePath) => {
+  try {
+    const ext = path.extname(filePath).toLowerCase();
+    let text = "";
+    if (ext === ".docx" || ext === ".doc") {
+      const result = await mammoth.extractRawText({ path: filePath });
+      text = result.value;
+    } else if (ext === ".pdf") {
+      const dataBuffer = fs.readFileSync(filePath);
+      const data = await pdfParse(dataBuffer);
+      text = data.text;
+    } else if (ext === ".txt") {
+      text = fs.readFileSync(filePath, "utf-8");
+    } else {
+      throw new Error("Unsupported file type. Only PDF, Word documents, and TXT files are allowed.");
     }
 
-    return uniqueName;
+    console.log("Extracted text length:", text.length);
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "You're an expert in book analysis. Always respond in valid JSON format." },
+        { role: "user", content: `Analyze the book content and return a JSON object with the following format:
+    {
+      "title": "...",
+      "subject": "...",
+       "medium": "English or Tamil — identify the language of the content",
+      "totalChapters": 0,
+      "chapters": ["...", "..."],
+      "totalTopics": 0,
+      "topics": ["...", "..."]
+    }
+    
+    Here is the book content:
+    ${text}
+    `},
+      ],
+      temperature: 0.2,
+    });
+    
+
+    console.log("OpenAI response:", response.choices[0].message.content);
+    return JSON.parse(response.choices[0].message.content);
+  } catch (error) {
+    console.error("Metadata extraction error:", error);
+    return null;
+  }
 };
+
+// const ensureUniqueOriginalName = async (userId, originalName) => {
+//     let counter = 1;
+//     let uniqueName = originalName;
+
+//     while (true) {
+//         const existing = await Book.findOne({
+//             where: { user_id: userId, original_name: uniqueName },
+//         });
+//         if (!existing) break;
+
+//         const ext = path.extname(originalName);
+//         const base = path.basename(originalName, ext);
+//         uniqueName = `${base}_${counter}${ext}`;
+//         counter++;
+//     }
+
+//     return uniqueName;
+// };
 
 const uploadBook = async (req, res) => {
     upload.single("file")(req, res, async (err) => {
@@ -95,10 +160,10 @@ const uploadBook = async (req, res) => {
         }
 
         try {
-            const { title, author, subject, class_name, medium ,total_chapters,metadata} = req.body;
+            const { title, author, subject, class_name, medium ,total_chapters} = req.body;
             const userId = req.user.id;
 
-            if (!req.file || !title) {
+            if (!req.file ) {
                 return res.status(400).json({ error: "File and title are required." });
             }
 
@@ -117,15 +182,15 @@ const uploadBook = async (req, res) => {
                 uniqueFileName = existingBook.unique_name;
                 fs.unlinkSync(tempFilePath);
             } else {
-                uniqueFileName = await generateUniqueFileName(userId);
+                uniqueFileName = await generateUniqueFileName(userId, contentHash);
                 const ext = path.extname(originalName);
                 uniqueFileName += ext;
                 finalFilePath = path.join(uploadDir, uniqueFileName);
                 fs.renameSync(tempFilePath, finalFilePath);
             }
 
-            // const metadata = await extractMetadataFromFile(finalFilePath);
-            const finalOriginalName = await ensureUniqueOriginalName(userId, originalName);
+            const metadata = await extractMetadataFromFile(finalFilePath);
+            // const finalOriginalName = await ensureUniqueOriginalName(userId, originalName);
 
             const [book, created] = await Book.findOrCreate({
                 where: {
@@ -140,12 +205,12 @@ const uploadBook = async (req, res) => {
                     medium,
                     total_chapters,
                     user_id: userId,
-                    original_name: finalOriginalName,
+                    original_name: originalName,
                     unique_name: uniqueFileName,
                     file_path: finalFilePath,
                     file_type: fileType,
                     content_hash: contentHash,
-                    metadata,
+                    metadata: metadata,
                 },
             });
 

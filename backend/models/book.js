@@ -5,7 +5,7 @@ const User = require('./users');
 
 const Book = sequelize.define('Book', {
   book_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  title: { type: DataTypes.STRING, allowNull: false },
+  title: { type: DataTypes.STRING, },
   author: DataTypes.STRING,
   subject: DataTypes.STRING,
   class_name: DataTypes.STRING,
