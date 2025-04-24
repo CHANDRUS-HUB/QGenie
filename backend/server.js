@@ -13,18 +13,14 @@ const sequelize = require("./models/db");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port =  7000;
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(cors({
-//   origin: "http://localhost:3000",  // Allow only frontend origin
-//   credentials: true ,
-//    methods: "GET,POST,PUT,DELETE",
-// // allowedHeaders: "Content-Type,Authorization" // Allow cookies & authentication headers
-// }));
+
+
 
 
 app.use(cors({
@@ -32,9 +28,7 @@ app.use(cors({
     // If there's no origin (i.e., if the request is from a same-origin source), allow it
     if (!origin || /10\.\d+\.\d+\.\d+\:\d+/i.test(origin)) {
       callback(null, true); // Allow all IPs
-    } else {
-      callback(new Error('Not allowed by CORS'), false); // Reject other origins (optional, can be customized)
-    }
+    } 
   },
   credentials: true,  // Allow credentials like cookies to be sent
   methods: "GET, POST, PUT, DELETE",
@@ -42,7 +36,7 @@ app.use(cors({
 }));
 
 
-
+app.use("/", userRoutes,bookRouters);
 // Sync the database
 sequelize.sync({ alter: true })
   .then(() => console.log("Database & tables synced!"))
@@ -50,7 +44,7 @@ sequelize.sync({ alter: true })
 
 
 // Routes
-app.use("/", userRoutes,bookRouters);
+
 
 const buildPath = path.join(__dirname, "../Frontend/build");
 app.use(express.static(buildPath));

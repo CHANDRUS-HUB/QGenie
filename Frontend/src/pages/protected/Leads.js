@@ -7,7 +7,7 @@ function InternalPage(){
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "Q&A Paper Generator"}))
+        dispatch(setPageTitle({ title: "Files Uploading & Processing  " }))
       }, [])
 
 

@@ -3,10 +3,11 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
 const User = require('./users');
 
+
+
 const Book = sequelize.define('Book', {
   book_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   title: { type: DataTypes.STRING, },
-  author: DataTypes.STRING,
   subject: DataTypes.STRING,
   class_name: DataTypes.STRING,
   medium: DataTypes.STRING,
@@ -18,6 +19,7 @@ const Book = sequelize.define('Book', {
   file_type: DataTypes.STRING,
   content_hash: { type: DataTypes.TEXT, allowNull: false },
   metadata: DataTypes.JSONB,
+  book_ispublic: { type: DataTypes.BOOLEAN, defaultValue: false },
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, {
@@ -32,6 +34,10 @@ const Book = sequelize.define('Book', {
 });
 
 User.hasMany(Book, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+
 Book.belongsTo(User, { foreignKey: 'user_id' });
+
+// boook belongs to book_actions
+
 
 module.exports = Book;
