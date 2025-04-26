@@ -79,8 +79,7 @@ const calculateFileHash = (filePath) => {
 const OpenAI = require("openai");
 const mammoth = require("mammoth");
 const openai = new OpenAI({
-  apiKey: '',
-});
+  apiKey: });
 const extractMetadataFromFile = async (filePath) => {
   try {
     const ext = path.extname(filePath).toLowerCase();
@@ -172,7 +171,7 @@ const uploadBook = async (req, res) => {
     }
 
     try {
-      const { title, subject, class_name, medium, total_chapters ,Book_isPublic} = req.body;
+      const { title, subject, class_name, medium, total_chapters ,Book__ispublic} = req.body;
       const userId = req.user.id;
 
       if (!req.file) {
@@ -185,9 +184,17 @@ const uploadBook = async (req, res) => {
       if (!class_name) {
         return res.status(400).json({ error: "class_name is required." });
       }
-      if(!Book_isPublic){
-        return res.status(400).json({ error: "Book_isPublic is required." });
-      }
+
+        // Convert Book__ispublic to boolean if it's a string
+        const isPublic = Book__ispublic === "true";
+
+        // Define whether the book is public or private
+        if (Book__ispublic === undefined) {
+      return res.status(400).json({ error: "Book__ispublic is required." });
+        }
+        if (typeof isPublic !== "boolean") {
+      return res.status(400).json({ error: "Book__ispublic must be a boolean value." });
+        }
       const originalName = req.file.originalname;
       const tempFilePath = req.file.path;
       const fileType = req.file.mimetype;
@@ -211,20 +218,20 @@ const uploadBook = async (req, res) => {
       }
 
       let metadata = null;
-      if (!existingBook) {
-        metadata = await extractMetadataFromFile(finalFilePath);
+      // if (!existingBook) {
+      //   metadata = await extractMetadataFromFile(finalFilePath);
       
-        if (!metadata) {
-          // Cleanup the uploaded file if it exists
-          if (fs.existsSync(finalFilePath)) {
-            fs.unlinkSync(finalFilePath);
-          }
+      //   if (!metadata) {
+      //     // Cleanup the uploaded file if it exists
+      //     if (fs.existsSync(finalFilePath)) {
+      //       fs.unlinkSync(finalFilePath);
+      //     }
       
-          return res.status(400).json({
-            error: "Failed to upload the file.Minimum 12,000–12,300 words are accessible.",
-          });
-        }
-      }
+      //     return res.status(400).json({
+      //       error: "Failed to upload the file.Minimum 12,000–12,300 words are accessible.",
+      //     });
+      //   }
+      // }
       
       // const finalOriginalName = await ensureUniqueOriginalName(userId, originalName);
 
@@ -246,7 +253,7 @@ const uploadBook = async (req, res) => {
           file_type: fileType,
           content_hash: contentHash,
           metadata: metadata,
-          Book_isPublic,
+          book_ispublic: isPublic,
         },
       });
 

@@ -26,6 +26,7 @@ function Leads() {
     const [errorMessage2, setErrorMessage2] = useState("");
     const [subject, setSubject] = useState("");
     const [className, setClassName] = useState("");
+
     const [responseContent, setResponseContent] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isValidFile, setIsValidFile] = useState(null);
@@ -89,6 +90,7 @@ function Leads() {
             return;
         }
 
+
         // Clear error messages
         setErrorMessage("");
         setErrorMessage2("");
@@ -99,7 +101,12 @@ function Leads() {
         formData.append("file", file);
         formData.append("subject", subject);
         formData.append("class_name", className);
-        formData.append("book_ispublic", bookIsPublic); // Add the visibility status
+        formData.append("Book__ispublic", bookIsPublic.toString());
+
+        console.log(bookIsPublic.toString());
+
+
+
 
         try {
             const response = await axios.post(`${baseUrl}/upload-book`, formData, {
@@ -136,6 +143,12 @@ function Leads() {
             }
         } catch (error) {
             const response = error.response;
+            if(401 === response.status){
+                toast.error("Session expired. Please login again.");
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
+            }
             if (response && response.data && response.data.error) {
                 toast.error(response.data.error);
             }
@@ -259,41 +272,41 @@ function Leads() {
 
 
                         <div className="mt-4 flex items-center space-x-4">
-   
-   
-    <label className="font-medium text-gray-700">
-        Book Visibility set as <span className="font-bold text-black">{bookIsPublic ? 'Public' : 'Private'}</span>
-  <br/>
-  <p className="text-sm text-gray-500 mt-2">
-    {bookIsPublic 
-        ? "Anyone can view this book when it's set to Public." 
-        : "Only you can view this book when it's set to Private."}
-</p>
-  
-    </label>
 
-    <label
-        htmlFor="visibility-toggle"
-        className="relative inline-flex items-center cursor-pointer"
-    >
-        <input
-            type="checkbox"
-            id="visibility-toggle"
-            checked={bookIsPublic}
-            onChange={togglePublicStatus}
-            className="sr-only"
-        />
-        <div className="w-10 h-5 bg-gray-300 rounded-full shadow-inner transition-colors duration-300 ease-in-out">
-            {/* Inner toggle circle */}
-            <div
-                className={`${bookIsPublic ? 'translate-x-5 bg-green-500' : 'translate-x-0 bg-red-500'
-                    } absolute left-1 top-1 w-3 h-3 rounded-full transition-all duration-300 ease-in-out`}
-            ></div>
-        </div>
-    </label>
-</div>
 
-{/* Add description text below */}
+                            <label className="font-medium text-gray-700">
+                                Book Visibility set as <span className="font-bold text-black">{bookIsPublic ? 'Public' : 'Private'}</span>
+                                <br />
+                                <p className="text-sm text-gray-500 mt-2">
+                                    {bookIsPublic
+                                        ? "Anyone can view this book when it's set to Public."
+                                        : "Only you can view this book when it's set to Private."}
+                                </p>
+
+                            </label>
+
+                            <label
+                                htmlFor="visibility-toggle"
+                                className="relative inline-flex items-center cursor-pointer"
+                            >
+                                <input
+                                    type="checkbox"
+                                    id="visibility-toggle"
+                                    checked={bookIsPublic}
+                                    onChange={togglePublicStatus}
+                                    className="sr-only"
+                                />
+                                <div className="w-10 h-5 bg-gray-300 rounded-full shadow-inner transition-colors duration-300 ease-in-out">
+                                    {/* Inner toggle circle */}
+                                    <div
+                                        className={`${bookIsPublic ? 'translate-x-5 bg-green-500' : 'translate-x-0 bg-red-500'
+                                            } absolute left-1 top-1 w-3 h-3 rounded-full transition-all duration-300 ease-in-out`}
+                                    ></div>
+                                </div>
+                            </label>
+                        </div>
+
+                        {/* Add description text below */}
 
 
 
@@ -321,12 +334,17 @@ function Leads() {
                 )}
             </TitleCard>
 
-
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 animate-fade-in">
                         <div className="border-b pb-4 mb-6">
-                            <h3 className="text-3xl font-semibold text-gray-800">📘 Book Details</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-3xl font-semibold text-gray-800">📘 Book Details</h3>
+                                <span className={`px-3 py-1 rounded-full font-semibold text-white ${responseContent.book.book_ispublic ? 'bg-green-500' : 'bg-red-500'}`}>
+                                    {responseContent.book.book_ispublic ? "Public" : "Private"}
+                                </span>
+                            </div>
+
                             <p className="text-gray-500 text-sm mt-1">
                                 {responseContent?.message || "The response from the server will be displayed here."}
                             </p>
@@ -367,11 +385,8 @@ function Leads() {
                         </div>
                     </div>
                 </div>
-
-
-
-
             )}
+
         </>
     );
 }

@@ -35,6 +35,9 @@ function App() {
         }
       } catch (error) {
         setIsAuthenticated(false);
+        
+       
+         
       } finally {
         setLoading(false);
       }

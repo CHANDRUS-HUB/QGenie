@@ -42,6 +42,12 @@ function ProfileSettings() {
                 
             } catch (err) {
                 console.error("Error fetching user:", err);
+                if (err.response && err.response.status === 401) {
+                    toast.error("Session expired. Please log in again.");
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 1000);
+                }
             }
         };
 
@@ -72,6 +78,12 @@ function ProfileSettings() {
             toast.success(response.data.message);
 
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                toast.error("Session expired. Please log in again.");
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 1000);
+            }
             const msg = error.response?.data?.message;
             const errorList = error.response?.data?.errors || [];
             setErrors(errorList);

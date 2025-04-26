@@ -164,10 +164,10 @@ const loginUser = async (req, res) => {
 
         try {
             const user = await User.findOne({ where: { email: email.trim().toLowerCase() } });
-            if (!user) return res.status(401).json({ message: "We couldn’t find your account try signing up!" });
+            if (!user) return res.status(400).json({ message: "We couldn’t find your account try signing up!" });
     
             const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) return res.status(401).json({ message: "Invalid password" });
+            if (!isMatch) return res.status(400).json({ message: "Invalid password" });
     
             const token = generateToken(user);
             res.cookie("token", token, {
