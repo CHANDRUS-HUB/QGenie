@@ -16,16 +16,5 @@ const Chapter = sequelize.define('Chapter', {
   timestamps: false,
 });
 
-Book.hasMany(Chapter, {
-  foreignKey: 'book_id',
-  onDelete: 'CASCADE',
-  hooks: true, // 🟢 Required for Sequelize-level cascading
-});
-Chapter.belongsTo(Book, { foreignKey: 'book_id' });
-Chapter.hasMany(Topic, {
-  foreignKey: 'chapter_id',
-  onDelete: 'CASCADE',
-  hooks: true, // 🟢 Required for Sequelize-level cascading
-});
-Topic.belongsTo(Chapter, { foreignKey: 'chapter_id' });
+
 module.exports = Chapter;

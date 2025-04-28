@@ -366,11 +366,11 @@ function Leads() {
                                         <span className="font-medium text-gray-900">Medium:</span> {responseContent.book.medium || "N/A"}
                                     </div>
                                     <div>
-                                        <span className="font-medium text-gray-900">Total Chapters:</span> {responseContent.book.metadata?.totalChapters || "N/A"}
+                                        <span className="font-medium text-gray-900">Total Chapters:</span> {responseContent.book.total_chapters || "N/A"}
                                     </div>
-                                    <div>
+                                    {/* <div>
                                         <span className="font-medium text-gray-900">Total Topics:</span> {responseContent.book.metadata?.totalTopics || "N/A"}
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         )}

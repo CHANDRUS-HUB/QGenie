@@ -1,18 +1,18 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../features/common/headerSlice'
-import ViewBooks from '../../features/integration'
+import QA_Generation from '../../features/QA_Generation'
 
 function InternalPage(){
 
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "View Books" }))
+        dispatch(setPageTitle({ title : "Q&A Generation" }))
       }, [])
       
     return(
-        <ViewBooks />
+        <QA_Generation/>
     )
 }
 

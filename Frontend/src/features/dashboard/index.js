@@ -8,6 +8,7 @@ import CircleStackIcon  from '@heroicons/react/24/outline/CircleStackIcon'
 import CreditCardIcon  from '@heroicons/react/24/outline/CreditCardIcon'
 import UserChannels from './components/UserChannels'
 import LineChart from './components/LineChart'
+
 import BarChart from './components/BarChart'
 import DashboardTopBar from './components/DashboardTopBar'
 import { useDispatch } from 'react-redux'

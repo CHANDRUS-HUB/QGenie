@@ -19,6 +19,9 @@ import InboxArrowDownIcon from '@heroicons/react/24/outline/InboxArrowDownIcon'
 import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
 import KeyIcon from '@heroicons/react/24/outline/KeyIcon'
 import DocumentDuplicateIcon from '@heroicons/react/24/outline/DocumentDuplicateIcon'
+import { RiBookShelfLine } from "react-icons/ri";
+import { MdOutlineUploadFile } from "react-icons/md";
+import { RiAiGenerateText } from "react-icons/ri";
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -30,10 +33,20 @@ const routes = [
     icon: <Squares2X2Icon className={iconClasses} />,
     name: 'Dashboard',
   },
+  
+  {
+    path: '/app/Upload-Books', // url
+    icon: <MdOutlineUploadFile className={iconClasses} />, // icon component
+    name: 'Upload Books', // name that appear in Sidebar
+  },
   {
     path: '/app/Q&A-Generation', // url
-    icon: <InboxArrowDownIcon className={iconClasses} />, // icon component
-    name: 'Q&A Generation', // name that appear in Sidebar
+    icon: (
+      <div className="w-6 h-5 flex items-center ">
+        <RiAiGenerateText className="w-6 h-6" />
+      </div>
+    ), // icon component
+    name: 'Q&A Generation', // name that appears in Sidebar
   },
   // {
   //   path: '/app/transactions', // url
@@ -46,15 +59,26 @@ const routes = [
   //   name: 'Analytics', // name that appear in Sidebar
   // },
   {
-    path: '/app/viewBooks', // url
+    path: '/app/userBooks', // url
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={iconClasses}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" />
       </svg>
     ),
     // icon: <BoltIcon className={iconClasses}/>, // icon component
-    name: 'View Books', // name that appear in Sidebar
+    name: 'User Books', // name that appear in Sidebar
   },
+
+  {
+    path: '/app/publicBooks', // url
+    icon: (
+      <div className="w-6 h-5 flex items-center ">
+        <RiBookShelfLine className="w-6 h-6" />
+      </div>
+    ), // icon component
+    name: 'Public Books', // name that appears in Sidebar
+  },
+
   // {
   //   path: '/app/calendar', // url
   //   icon: <CalendarDaysIcon className={iconClasses}/>, // icon component

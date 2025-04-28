@@ -5,7 +5,7 @@ const Chapter = require('./chapters');
 const Topic = require('./topics');
 const User = require('./users');
 
-const Question = sequelize.define('Question', {
+const Question = sequelize.define('question', {
   question_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   book_id: { type: DataTypes.INTEGER, allowNull: false },
   chapter_id: { type: DataTypes.INTEGER, allowNull: false },
@@ -14,30 +14,29 @@ const Question = sequelize.define('Question', {
 
   question_type: {
     type: DataTypes.ENUM(
-      'objective',
       'fill_in_the_blanks',
       'match_the_following',
       'logical_reasoning',
-      'descriptive',
+      'short_answer',
+      'long_answer',
+      'true_or_false',
+      'multiple_choice',
       'comprehension'
     ),
     allowNull: false,
   },
 
-  difficulty_level: {
-    type: DataTypes.ENUM('easy', 'medium', 'hard'),
-    allowNull: false,
+
+ no_of_questions_by_difficulty: {
+    type: DataTypes.JSON, // Use JSON to store the question breakdown by difficulty
+    defaultValue: { easy: 1, medium: 1, hard: 1 }, // Default breakdown (all set to 0)
+    allowNull: false, // Ensure the column is always populated
   },
 
-  question_text: { type: DataTypes.TEXT,
+  all_questions: { 
+    type: DataTypes.JSONB,
     //  allowNull: false
      },
-
-  number_of_questions: {
-    type: DataTypes.INTEGER,
-    // allowNull: false,
-    defaultValue: 1, // usually 1 per row, unless bulk logic needed
-  },
 
   options: {
     type: DataTypes.JSONB, // null for descriptive, comprehension
@@ -56,17 +55,6 @@ const Question = sequelize.define('Question', {
   timestamps: false,
 });
 
-// Associations
-Book.hasMany(Question, { foreignKey: 'book_id', onDelete: 'CASCADE' });
-Question.belongsTo(Book, { foreignKey: 'book_id' });
 
-Chapter.hasMany(Question, { foreignKey: 'chapter_id', onDelete: 'CASCADE' });
-Question.belongsTo(Chapter, { foreignKey: 'chapter_id' });
-
-Topic.hasMany(Question, { foreignKey: 'topic_id', onDelete: 'CASCADE' });
-Question.belongsTo(Topic, { foreignKey: 'topic_id' });
-
-User.hasMany(Question, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-Question.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = Question;

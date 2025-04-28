@@ -2,9 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const multer = require("multer");
-const Book = require("../models/book"); // Sequelize model
-const Chapter = require("../models/chapters"); // Sequelize model
-const Topic = require('../models/topics')
+const { Book, Chapter, Topic, Question, User } = require('../models/association');
+
 const pdfParse = require("pdf-parse");
 require("dotenv").config();
 const { Op } = require("sequelize");
@@ -79,7 +78,8 @@ const calculateFileHash = (filePath) => {
 const OpenAI = require("openai");
 const mammoth = require("mammoth");
 const openai = new OpenAI({
-  apiKey: });
+  apiKey: '',
+});
 const extractMetadataFromFile = async (filePath) => {
   try {
     const ext = path.extname(filePath).toLowerCase();
@@ -142,24 +142,7 @@ const extractMetadataFromFile = async (filePath) => {
   }
 };
 
-// const ensureUniqueOriginalName = async (userId, originalName) => {
-//     let counter = 1;
-//     let uniqueName = originalName;
 
-//     while (true) {
-//         const existing = await Book.findOne({
-//             where: { user_id: userId, original_name: uniqueName },
-//         });
-//         if (!existing) break;
-
-//         const ext = path.extname(originalName);
-//         const base = path.basename(originalName, ext);
-//         uniqueName = `${base}_${counter}${ext}`;
-//         counter++;
-//     }
-
-//     return uniqueName;
-// };
 
 const uploadBook = async (req, res) => {
   upload.single("file")(req, res, async (err) => {
@@ -209,30 +192,35 @@ const uploadBook = async (req, res) => {
         finalFilePath = existingBook.file_path;
         uniqueFileName = existingBook.unique_name;
         fs.unlinkSync(tempFilePath);
+
+        // Use existing book metadata
+        metadata = existingBook.metadata 
+        ? (typeof existingBook.metadata === "string" ? JSON.parse(existingBook.metadata) : existingBook.metadata)
+        : {
+            title: existingBook.title,
+            medium: existingBook.medium,
+          };
+      
       } else {
         uniqueFileName = await generateUniqueFileName(userId, contentHash);
         const ext = path.extname(originalName);
         uniqueFileName += ext;
         finalFilePath = path.join(uploadDir, uniqueFileName);
         fs.renameSync(tempFilePath, finalFilePath);
-      }
 
-      let metadata = null;
-      // if (!existingBook) {
-      //   metadata = await extractMetadataFromFile(finalFilePath);
-      
-      //   if (!metadata) {
-      //     // Cleanup the uploaded file if it exists
-      //     if (fs.existsSync(finalFilePath)) {
-      //       fs.unlinkSync(finalFilePath);
-      //     }
-      
-      //     return res.status(400).json({
-      //       error: "Failed to upload the file.Minimum 12,000–12,300 words are accessible.",
-      //     });
-      //   }
-      // }
-      
+        metadata = await extractMetadataFromFile(finalFilePath);
+
+        if (!metadata) {
+          // Cleanup the uploaded file if it exists
+          if (fs.existsSync(finalFilePath)) {
+        fs.unlinkSync(finalFilePath);
+          }
+
+          return res.status(400).json({
+        error: "Failed to upload the file. Minimum 12,000–12,300 words are accessible.",
+          });
+        }
+      }
       // const finalOriginalName = await ensureUniqueOriginalName(userId, originalName);
 
       const [book, created] = await Book.findOrCreate({
@@ -275,6 +263,7 @@ const uploadBook = async (req, res) => {
         message: "Book uploaded successfully.",
         book,
         book_id: book.book_id,
+        
       });
 
     } catch (error) {
@@ -285,6 +274,25 @@ const uploadBook = async (req, res) => {
     }
   });
 };
+
+// const ensureUniqueOriginalName = async (userId, originalName) => {
+//     let counter = 1;
+//     let uniqueName = originalName;
+
+//     while (true) {
+//         const existing = await Book.findOne({
+//             where: { user_id: userId, original_name: uniqueName },
+//         });
+//         if (!existing) break;
+
+//         const ext = path.extname(originalName);
+//         const base = path.basename(originalName, ext);
+//         uniqueName = `${base}_${counter}${ext}`;
+//         counter++;
+//     }
+
+//     return uniqueName;
+// };
 
 //chapter entry automatic
 async function insertChaptersFromMetadata(book_id, metadata) {
@@ -453,7 +461,12 @@ const getBooksByUserId = async (req, res) => {
     const userId = req.user.id;
 
     const books = await Book.findAll({
-      where: { user_id: userId },
+      where: {
+        [Op.or]: [
+          { user_id: userId }, // Books uploaded by the user
+          // { book_ispublic: true }, // Public books
+        ],
+      },
       include: [
         {
           model: Chapter,
@@ -465,6 +478,26 @@ const getBooksByUserId = async (req, res) => {
     res.status(200).json({ books });
   } catch (error) {
     console.error("Error fetching books by user ID:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+//get all books which are public that is true
+const getPublicBooks = async (req, res) => {
+  try {
+    const books = await Book.findAll({
+      where: { book_ispublic: true },
+      include: [
+        {
+          model: Chapter,
+          include: [Topic],
+        },
+      ],
+    });
+
+    res.status(200).json({ books });
+  } catch (error) {
+    console.error("Error fetching public books:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -499,4 +532,36 @@ const getBookById = async (req, res) => {
   }
 };
 
-module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById };
+//current user can update the book which are uploaded by him
+const updateBookByCurrentUser = async (req, res) => {
+  try {
+    const { book_id } = req.body;
+    const { title, subject, class_name, medium,book_ispublic } = req.body;
+
+    if (!book_id) {
+      return res.status(400).json({ error: "book id is required" });
+    }
+
+    const book = await Book.findOne({ where: { book_id } });
+
+    if (!book) {
+      return res.status(404).json({ error: "Book not found for the given book_id" });
+    }
+
+    // Update the book details
+    await book.update({
+      title,
+      subject,
+      class_name,
+      medium,
+      book_ispublic,
+    });
+
+    res.status(200).json({ message: "Book updated successfully", book });
+  } catch (error) {
+    console.error("Error updating book:", error.message || error);
+    res.status(500).json({ error: "Something went wrong while updating the book." });
+  }
+};
+
+module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks};

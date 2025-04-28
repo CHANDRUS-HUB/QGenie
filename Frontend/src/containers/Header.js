@@ -41,17 +41,21 @@ function Header(){
     }
 
 
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     async function logoutUser() {
-        try {
-            await axios.post(`${baseUrl}/logout`, null, {withCredentials: true }); 
-            toast.success("Logged out successfully")
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 1000);
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
+      try {
+        await axios.post(`${baseUrl}/logout`, null, { withCredentials: true });
+        toast.success("Logged out successfully");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Failed to logout");
+      }
     }
+  
 
     return(
         // navbar fixed  flex-none justify-between bg-base-300  z-10 shadow-md
@@ -106,12 +110,40 @@ function Header(){
                         </li>
                         {/* <li className=''><Link to={'/app/settings-billing'}>Bill History</Link></li> */}
                         <div className="divider mt-0 mb-0"></div>
-                        <li><a onClick={logoutUser}>Logout</a></li>
+                        <li>
+        <a onClick={() => setShowLogoutModal(true)}>Logout</a>
+      </li>
                     </ul>
                 </div>
             </div>
             </div>
 <Toaster />
+ {/* Logout Confirmation Modal */}
+ {showLogoutModal && (
+        <dialog id="logout_modal" className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Confirm Logout</h3>
+            <p className="py-4">Are you sure you want to logout?</p>
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                className="btn btn-error"
+                onClick={async () => {
+                  await logoutUser();
+                  setShowLogoutModal(false);
+                }}
+              >
+                Yes, Logout
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
         </>
     )
 }

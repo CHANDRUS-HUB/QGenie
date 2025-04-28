@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const userRoutes = require("./router/userRoute");
 const bookRouters = require("./router/bookRoute");
+const questionROutes=require('./router/questionsRoute')
 const path = require("path");
 
 //database connection
@@ -36,11 +37,9 @@ app.use(cors({
 }));
 
 
-app.use("/", userRoutes,bookRouters);
-// Sync the database
-sequelize.sync({ alter: true })
-  .then(() => console.log("Database & tables synced!"))
-  .catch((err) => console.error("Database sync error:", err));
+app.use("/", userRoutes,bookRouters,questionROutes);
+
+
 
 
 // Routes
@@ -57,6 +56,12 @@ app.get("*", (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Sync the database
+sequelize.sync({ alter: true })
+  .then(() => console.log("Database & tables synced!"))
+  .catch((err) => console.error("Database sync error:", err));
+
 
 app.listen(port, () => {
     console.log(`Server running on ${port}`);

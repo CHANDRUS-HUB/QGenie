@@ -1,7 +1,8 @@
 // controllers/usersController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/users");
+const { Book, Chapter, Topic, Question, User } = require('../models/association');
+
 const nodemailer = require("nodemailer");
 const { validateUserInput } = require("./utils/validators");
 

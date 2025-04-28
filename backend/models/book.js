@@ -33,11 +33,7 @@ const Book = sequelize.define('Book', {
   ],
 });
 
-User.hasMany(Book, { foreignKey: 'user_id', onDelete: 'CASCADE' });
 
-Book.belongsTo(User, { foreignKey: 'user_id' });
-
-// boook belongs to book_actions
 
 
 module.exports = Book;
