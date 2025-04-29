@@ -87,223 +87,211 @@ function Integration() {
   };
 
 return (
-    <div className="relative">
-        <Toaster />
+  <div className="relative">
+    <Toaster />
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {integrationList.map((integration, index) => (
-                <div
-                    key={index}
-                    className="backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-6 flex flex-col justify-between"
+    {integrationList.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {integrationList.map((integration, index) => (
+          <div
+            key={index}
+            className="backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-6 flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {integration.name}
+              </h2>
+              <div
+                className={`text-xs font-bold px-3 py-1 rounded-full shadow-md ${
+                  integration.isActive
+                    ? "bg-green-500/80 text-white"
+                    : "bg-red-500/80 text-white"
+                }`}
+              >
+                {integration.isActive ? "Public" : "Private"}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-5">
+              <img
+                alt="icon"
+                src={integration.icon}
+                className="w-14 h-14 rounded-full object-cover dark:ring-4 ring-indigo-300 hover:scale-110 transition-transform duration-300"
+              />
+              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <li>
+                  <span className="font-semibold">Subject:</span> {integration.subject}
+                </li>
+                <li>
+                  <span className="font-semibold">Class:</span> {integration.className}
+                </li>
+                <li>
+                  <span className="font-semibold">Medium:</span> {integration.medium}
+                </li>
+                <li>
+                  <span className="font-semibold">Chapters:</span> {integration.totalChapters}
+                </li>
+              </ul>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => editIntegration(index)}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-green-500 to-lime-400 text-white text-sm font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                    {/* Top Section */}
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                                {integration.name}
-                            </h2>
-                        </div>
-                        <div
-                            className={`text-xs font-bold px-3 py-1 rounded-full shadow-md ${
-                                integration.isActive
-                                    ? "bg-green-500/80 text-white"
-                                    : "bg-red-500/80 text-white"
-                            }`}
-                        >
-                            {integration.isActive ? "Public" : "Private"}
-                        </div>
-                    </div>
-
-                    {/* Middle Section */}
-                    <div className="flex items-center space-x-5">
-                        <img
-                            alt="icon"
-                            src={integration.icon}
-                            className="w-14 h-14 rounded-full object-cover dark:ring-4 ring-indigo-300 hover:scale-110 transition-transform duration-300"
-                        />
-                        <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                            <li>
-                                <span className="font-semibold">Subject:</span> {integration.subject}
-                            </li>
-                            <li>
-                                <span className="font-semibold">Class:</span> {integration.className}
-                            </li>
-                            <li>
-                                <span className="font-semibold">Medium:</span> {integration.medium}
-                            </li>
-                            <li>
-                                <span className="font-semibold">Chapters:</span> {integration.totalChapters}
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Bottom Action */}
-                    <div className="mt-6 flex justify-end">
-                        <button
-                            onClick={() => editIntegration(index)}
-                            className="inline-flex items-center gap-2 px-5 py-2 rounded-full  bg-gradient-to-r from-green-500 to-lime-400 text-white text-sm font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.713 3 21l1.287-4.5L16.862 3.487z"
-                                />
-                            </svg>
-                     
-                        </button>
-                    </div>
-                </div>
-            ))}
-        </div>
-
-     {/* Edit Modal */}
-     <dialog id="edit_modal" className="modal" open={isEditModalOpen}>
-  <div className="modal-box max-w-3xl bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8 relative">
-    
-    {/* Close Button */}
-    <button
-      className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
-      onClick={() => setIsEditModalOpen(false)}
-    >
-      ✕
-    </button>
-
-    {/* Modal Header */}
-    <h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-white">
-      Edit Book Details
-    </h2>
-
-    {/* Form Fields */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      {/* Book Title */}
-      <div className="form-control">
-        <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Book Title
-        </label>
-        <input
-          type="text"
-          value={currentEditData?.name || ""}
-          onChange={(e) =>
-            setCurrentEditData({ ...currentEditData, name: e.target.value })
-          }
-          className="input input-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
-          placeholder="Enter book title"
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.713 3 21l1.287-4.5L16.862 3.487z"
+                  />
+                </svg>
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="flex flex-col items-center justify-center h-96">
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+          alt="No Books"
+          className="w-32 h-32 mb-6"
         />
-      </div>
-
-      {/* Subject Dropdown */}
-      <div className="form-control">
-        <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Subject
-        </label>
-        <select
-          value={currentEditData?.subject || ""}
-          onChange={(e) =>
-            setCurrentEditData({ ...currentEditData, subject: e.target.value })
-          }
-          className="select select-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
-        >
-          <option disabled value="">Select Subject</option>
-          {subjectOptions.map((subject) => (
-            <option key={subject} value={subject}>
-              {subject}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Class Dropdown */}
-      <div className="form-control md:col-span-2">
-        <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          Class
-        </label>
-        <select
-          value={currentEditData?.className || ""}
-          onChange={(e) =>
-            setCurrentEditData({ ...currentEditData, className: e.target.value })
-          }
-          className="select select-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
-        >
-          <option disabled value="">Select Class</option>
-          {classOptions.map((classItem) => (
-            <option key={classItem} value={classItem}>
-              {classItem}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-
-    {/* Visibility Switch */}
-    <div className="mt-10 border-t pt-6 flex items-center justify-between">
-      <div className="text-left">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-300">
-          Book Visibility
-        </h4>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {currentEditData?.isActive
-            ? "🌍 This book is Public and visible to everyone."
-            : "🔒 This book is Private and only visible to you."}
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+          No Books Found
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
+          You haven't added any books yet. Start by creating one!
         </p>
       </div>
+    )}
 
-      <label className="swap swap-rotate">
-        <input
-          type="checkbox"
-          checked={currentEditData?.isActive || false}
-          onChange={(e) => {
-            const newIsActive = e.target.checked;
-            setCurrentEditData({
-              ...currentEditData,
-              isActive: newIsActive,
-              status: newIsActive ? "Public" : "Private",
-            });
-          }}
-        />
-        <div className="swap-on badge badge-success p-4 text-white text-sm">
-          Public
-        </div>
-        <div className="swap-off badge badge-error p-4 text-white text-sm">
-          Private
-        </div>
-      </label>
-    </div>
-
-    {/* Modal Actions */}
-    <div className="modal-action mt-10">
-      <div className="flex gap-4 w-full">
+    <dialog id="edit_modal" className="modal" open={isEditModalOpen}>
+      <div className="modal-box max-w-3xl bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-8 relative">
         <button
-          className="btn btn-outline w-1/2 border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-black-100 dark:hover:bg-gray-800"
+          className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
           onClick={() => setIsEditModalOpen(false)}
         >
-          Cancel
+          ✕
         </button>
-
-        <button
-          type="button"
-          onClick={handleSaveIntegration}
-          className="btn  bg-gradient-to-r from-green-500 to-lime-400 w-1/2 bg-primary text-white hover:bg-gray-700 transition-all"
-        >
-          Save
-        </button>
+        <h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-white">
+          Edit Book Details
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="form-control">
+            <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Book Title
+            </label>
+            <input
+              type="text"
+              value={currentEditData?.name || ""}
+              onChange={(e) =>
+                setCurrentEditData({ ...currentEditData, name: e.target.value })
+              }
+              className="input input-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
+              placeholder="Enter book title"
+            />
+          </div>
+          <div className="form-control">
+            <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Subject
+            </label>
+            <select
+              value={currentEditData?.subject || ""}
+              onChange={(e) =>
+                setCurrentEditData({ ...currentEditData, subject: e.target.value })
+              }
+              className="select select-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
+            >
+              <option disabled value="">Select Subject</option>
+              {subjectOptions.map((subject) => (
+                <option key={subject} value={subject}>
+                  {subject}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-control md:col-span-2">
+            <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              Class
+            </label>
+            <select
+              value={currentEditData?.className || ""}
+              onChange={(e) =>
+                setCurrentEditData({ ...currentEditData, className: e.target.value })
+              }
+              className="select select-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
+            >
+              <option disabled value="">Select Class</option>
+              {classOptions.map((classItem) => (
+                <option key={classItem} value={classItem}>
+                  {classItem}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="mt-10 border-t pt-6 flex items-center justify-between">
+          <div className="text-left">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-300">
+              Book Visibility
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {currentEditData?.isActive
+                ? "🌍 This book is Public and visible to everyone."
+                : "🔒 This book is Private and only visible to you."}
+            </p>
+          </div>
+          <label className="swap swap-rotate">
+            <input
+              type="checkbox"
+              checked={currentEditData?.isActive || false}
+              onChange={(e) => {
+                const newIsActive = e.target.checked;
+                setCurrentEditData({
+                  ...currentEditData,
+                  isActive: newIsActive,
+                  status: newIsActive ? "Public" : "Private",
+                });
+              }}
+            />
+            <div className="swap-on badge badge-success p-4 text-white text-sm">
+              Public
+            </div>
+            <div className="swap-off badge badge-error p-4 text-white text-sm">
+              Private
+            </div>
+          </label>
+        </div>
+        <div className="modal-action mt-10">
+          <div className="flex gap-4 w-full">
+            <button
+              className="btn btn-outline w-1/2 border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-black-100 dark:hover:bg-gray-800"
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveIntegration}
+              className="btn bg-gradient-to-r from-green-500 to-lime-400 w-1/2 bg-primary text-white hover:bg-gray-700 transition-all"
+            >
+              Save
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-
+    </dialog>
   </div>
-</dialog>
-
-
-    </div>
 );
 }
 

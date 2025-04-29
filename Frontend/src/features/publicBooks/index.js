@@ -41,63 +41,73 @@ function PublicBooks() {
   
     return (
       <div className="relative">
-        <Toaster />
-  
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {publicbooksList.map((integration, index) => (
-            <div
-              key={index}
-              className="backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-6 flex flex-col justify-between"
-            >
-              {/* Top Section */}
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {integration.name}
-                  </h2>
-                </div>
-                <div
-                  className={`text-xs font-bold px-3 py-1 rounded-full shadow-md ${
-                    integration.isActive
-                      ? "bg-green-500/80 text-white"
-                      : "bg-red-500/80 text-white"
-                  }`}
-                >
-                  {integration.status}
-                </div>
-              </div>
-  
-              {/* Middle Section */}
-              <div className="flex items-center space-x-5">
-                <img
-                  alt="icon"
-                  src={integration.icon}
-                  className="w-14 h-14 rounded-full object-cover dark:ring-4 ring-indigo-300 hover:scale-110 transition-transform duration-300"
-                />
-                <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  <li>
-                    <span className="font-semibold">Subject:</span> {integration.subject}
-                  </li>
-                  <li>
-                    <span className="font-semibold">Class:</span> {integration.className}
-                  </li>
-                  <li>
-                    <span className="font-semibold">Medium:</span> {integration.medium}
-                  </li>
-                  <li>
-                    <span className="font-semibold">Chapters:</span> {integration.totalChapters}
-                  </li>
-                </ul>
-              </div>
-  
-            
-             
-            </div>
-          ))}
+      <Toaster />
+
+      {publicbooksList.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full py-20">
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+          alt="No Books"
+          className="w-32 h-32 mb-6"
+        />
+        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
+          No Books Available
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400">
+          It seems there are no public books at the moment.
+        </p>
         </div>
-  
-       
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {publicbooksList.map((integration, index) => (
+          <div
+          key={index}
+          className="backdrop-blur-md bg-white/80 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 p-6 flex flex-col justify-between"
+          >
+          {/* Top Section */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              {integration.name}
+            </h2>
+            </div>
+            <div
+            className={`text-xs font-bold px-3 py-1 rounded-full shadow-md ${
+              integration.isActive
+              ? "bg-green-500/80 text-white"
+              : "bg-red-500/80 text-white"
+            }`}
+            >
+            {integration.status}
+            </div>
+          </div>
+
+          {/* Middle Section */}
+          <div className="flex items-center space-x-5">
+            <img
+            alt="icon"
+            src={integration.icon}
+            className="w-14 h-14 rounded-full object-cover dark:ring-4 ring-indigo-300 hover:scale-110 transition-transform duration-300"
+            />
+            <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+            <li>
+              <span className="font-semibold">Subject:</span> {integration.subject}
+            </li>
+            <li>
+              <span className="font-semibold">Class:</span> {integration.className}
+            </li>
+            <li>
+              <span className="font-semibold">Medium:</span> {integration.medium}
+            </li>
+            <li>
+              <span className="font-semibold">Chapters:</span> {integration.totalChapters}
+            </li>
+            </ul>
+          </div>
+          </div>
+        ))}
+        </div>
+      )}
       </div>
     );
   }

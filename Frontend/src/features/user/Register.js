@@ -51,9 +51,22 @@ function Register() {
         }
         if (registerObj.password.trim() === "") return setErrorMessage("Password is required!");
         // password must be atleast 6 characters long
-        else if (registerObj.password.length < 6) {
-            return setErrorMessage("Password must be atleast 6 characters long");
+        else if (registerObj.password.length < 8) {
+            return setErrorMessage("Password must be at least 8 characters long");
         }
+        else if (!/[A-Z]/.test(registerObj.password)) {
+            return setErrorMessage("Password must contain at least one uppercase letter");
+        }
+        else if (!/[a-z]/.test(registerObj.password)) {
+            return setErrorMessage("Password must contain at least one lowercase letter");
+        }
+        else if (!/[0-9]/.test(registerObj.password)) {
+            return setErrorMessage("Password must contain at least one number");
+        }
+        else if (!/[!@#$%^&*(),.?":{}|<>]/.test(registerObj.password)) {
+            return setErrorMessage("Password must contain at least one special character");
+        }
+
         // if (registerObj.phoneNumber.trim() === "") return setErrorMessage("Phone Number is required!");
         // //phone number is 12 digit and only numbers
         // else if (!registerObj.phoneNumber.match(/^\d{12}$/)) {
@@ -152,6 +165,28 @@ function Register() {
                                         containerStyle="mt-4"
                                         labelTitle="Password"
                                         updateFormValue={updateFormValue}
+                                        Oncustomchange={(e) => {
+                                            const newPassword = e.target.value; // ✅ Fix: Get the actual typed value
+                                            // Update state
+                                            updateFormValue({ updateType: "password", value: newPassword });
+                                            // Validate new value
+                                            if (newPassword.trim() === "") {
+                                                setErrorMessage("Password is required!");
+                                            } else if (newPassword.length < 8) {
+                                                setErrorMessage("Password must be at least 8 characters long");
+                                            } else if (!/[A-Z]/.test(newPassword)) {
+                                                setErrorMessage("Password must contain at least one uppercase letter");
+                                            } else if (!/[a-z]/.test(newPassword)) {
+                                                setErrorMessage("Password must contain at least one lowercase letter");
+                                            } else if (!/[0-9]/.test(newPassword)) {
+                                                setErrorMessage("Password must contain at least one number");
+                                            } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+                                                setErrorMessage("Password must contain at least one special character");
+                                            } else {
+                                                setErrorMessage(""); // Clear error if valid
+                                            }
+                                        }
+                                        }
                                     />
                                     <button
                                         type="button"

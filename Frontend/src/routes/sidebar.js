@@ -25,13 +25,13 @@ import { RiAiGenerateText } from "react-icons/ri";
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
-
+// Hide the dashboard for non-admin users
 const routes = [
-
   {
     path: '/app/dashboard',
     icon: <Squares2X2Icon className={iconClasses} />,
     name: 'Dashboard',
+    condition: (user) => user.role === 'Admin', // Only show for Admin users
   },
   
   {

@@ -10,6 +10,7 @@ const {
     deleteUser,
     forgotPassword,
     resetPassword,
+    getAllUsers,
 } = require("../controllers/usersController");
 
 const protectRoute = require("../middleware/protectRoute");
@@ -28,6 +29,7 @@ router.post("/reset-password", resetPassword);
 
 // User routes
 router.get("/profile", protectRoute, getProfile);
+router.get("/get-all-users", protectRoute, getAllUsers);
 router.put("/update", protectRoute, updateUser);
 router.delete("/delete", protectRoute, deleteUser);
 

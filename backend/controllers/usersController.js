@@ -183,6 +183,8 @@ const loginUser = async (req, res) => {
                 user: { id: user.id, email: user.email, role: user.role },
             });
         } catch (error) {
+          
+            
             res.status(500).json({ message: "Internal server error" });
         }
 };
@@ -310,6 +312,18 @@ const deleteUser = async (req, res) => {
     }
 };
 
+//get all users
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] } // Exclude the password field
+        });
+        res.status(200).json({ message: "All users", users });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
 
 module.exports = {
     registerUser,
@@ -321,4 +335,5 @@ module.exports = {
     deleteUser,
     forgotPassword,
     resetPassword,
+    getAllUsers,
 };

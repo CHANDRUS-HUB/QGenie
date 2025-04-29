@@ -26,10 +26,12 @@ app.use(cookieParser());
 
 app.use(cors({
   origin: (origin, callback) => {
-    // If there's no origin (i.e., if the request is from a same-origin source), allow it
-    if (!origin || /10\.\d+\.\d+\.\d+\:\d+/i.test(origin)) {
-      callback(null, true); // Allow all IPs
-    } 
+    // Allow requests from localhost:3000 and any IPs matching the regex
+    if (!origin || /10\.\d+\.\d+\.\d+\:\d+/i.test(origin) || origin === "http://localhost:3000") {
+      callback(null, true); // Allow the origin
+    } else {
+      callback(new Error("Not allowed by CORS")); // Reject other origins
+    }
   },
   credentials: true,  // Allow credentials like cookies to be sent
   methods: "GET, POST, PUT, DELETE",

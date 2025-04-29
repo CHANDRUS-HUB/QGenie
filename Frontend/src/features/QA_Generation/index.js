@@ -139,23 +139,6 @@ setTopics([]); // Clear topics if no chapters are found
     },
   ];
 
-
-
-  const getDifficultyColor = (level) => {
-    switch (level) {
-      case "Easy":
-        return "text-green-600";
-      case "Medium":
-        return "text-yellow-500";
-      case "Hard":
-        return "text-red-600";
-      default:
-        return "text-gray-700";
-    }
-  };
-
-
-
   const handleSelection = (label, value) => {
     setSelections({ ...selections, [label]: value });
   };
