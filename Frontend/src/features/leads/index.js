@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast'
 import InboxArrowDownIcon from '@heroicons/react/24/outline/InboxArrowDownIcon'
 import axios from "axios"
 import baseUrl from "../../utils/URL"
+import { motion } from "framer-motion"
 
 function Leads() {
     const { leads } = useSelector((state) => state.lead);
@@ -143,7 +144,7 @@ function Leads() {
             }
         } catch (error) {
             const response = error.response;
-            if(401 === response.status){
+            if (401 === response.status) {
                 toast.error("Session expired. Please login again.");
                 setTimeout(() => {
                     window.location.href = "/login";
@@ -172,7 +173,19 @@ function Leads() {
     ];
 
     return (
+
         <>
+            <motion.header
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mb-6 text-center rounded-xl shadow-xl bg-white/50 p-6 w-full max-w-4xl mx-auto"
+            >
+                <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent drop-shadow-md">
+                    QGENIE <span className="font-light">Questions Generator</span>
+                </h1>
+            </motion.header>
+
             <TitleCard title="Please select a file (accepted types: .doc, .docx, .pdf, .txt)" topMargin="mt-6">
                 <div
                     className={`relative border-2 ${isValidFile === null
@@ -206,19 +219,21 @@ function Leads() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center space-y-3">
-                            <InboxArrowDownIcon className="h-12 w-12 text-indigo-500" />
+                            <InboxArrowDownIcon className="h-12 w-12 text-green-400 " />
                             <p className="text-gray-700 text-base font-medium text-center">Drag and drop your file here</p>
                             <p className="text-sm text-gray-500 text-center">or click below to select a file</p>
 
                             {/* Styled file input */}
-                            <label className="inline-block cursor-pointer mt-2 px-4 py-2 bg-indigo-50 text-indigo-700 font-semibold text-sm rounded-lg hover:bg-indigo-100 transition">
+                            <label className="inline-block cursor-pointer mt-2 px-4 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold text-sm rounded-lg hover:bg-indigo-100 transition">
                                 Choose File
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
                                     className="hidden"
                                 />
+
                             </label>
+                            <h4 className="text-sm">(accepted types: .doc, .docx, .pdf, .txt)</h4>
                         </div>
                     )}
                 </div>
@@ -325,7 +340,7 @@ function Leads() {
                     </div>
                 ) : (
                     <button
-                        className="btn btn-primary mt-6"
+                        className="btn  mt-6 bg-gradient-to-r from-green-500 to-lime-500 text-white"
                         onClick={generateQuestionPaper}
                         disabled={isLoading} // Disable the button while loading
                     >
@@ -377,7 +392,7 @@ function Leads() {
 
                         <div className="mt-8 flex justify-end">
                             <button
-                                className="inline-flex items-center px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
+                                className="inline-flex items-center px-6 py-2  bg-gradient-to-r from-green-500 to-lime-400 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all"
                                 onClick={() => setIsModalOpen(false)}
                             >
                                 Close

@@ -142,7 +142,24 @@ const extractMetadataFromFile = async (filePath) => {
   }
 };
 
+// const ensureUniqueOriginalName = async (userId, originalName) => {
+//     let counter = 1;
+//     let uniqueName = originalName;
 
+//     while (true) {
+//         const existing = await Book.findOne({
+//             where: { user_id: userId, original_name: uniqueName },
+//         });
+//         if (!existing) break;
+
+//         const ext = path.extname(originalName);
+//         const base = path.basename(originalName, ext);
+//         uniqueName = `${base}_${counter}${ext}`;
+//         counter++;
+//     }
+
+//     return uniqueName;
+// };
 
 const uploadBook = async (req, res) => {
   upload.single("file")(req, res, async (err) => {
@@ -274,25 +291,6 @@ const uploadBook = async (req, res) => {
     }
   });
 };
-
-// const ensureUniqueOriginalName = async (userId, originalName) => {
-//     let counter = 1;
-//     let uniqueName = originalName;
-
-//     while (true) {
-//         const existing = await Book.findOne({
-//             where: { user_id: userId, original_name: uniqueName },
-//         });
-//         if (!existing) break;
-
-//         const ext = path.extname(originalName);
-//         const base = path.basename(originalName, ext);
-//         uniqueName = `${base}_${counter}${ext}`;
-//         counter++;
-//     }
-
-//     return uniqueName;
-// };
 
 //chapter entry automatic
 async function insertChaptersFromMetadata(book_id, metadata) {
@@ -455,6 +453,34 @@ const getAllBooks = async (req, res) => {
   }
 };
 
+
+const getBooksByUserIdandpublic = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const books = await Book.findAll({
+      where: {
+        [Op.or]: [
+          { user_id: userId }, // Books uploaded by the user
+          { book_ispublic: true }, // Public books
+        ],
+      },
+      include: [
+        {
+          model: Chapter,
+          include: [Topic],
+        },
+      ],
+    });
+
+    res.status(200).json({ books });
+  } catch (error) {
+    console.error("Error fetching books by user ID:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 //get all books by user id where the user uploaded books with chapters with topics
 const getBooksByUserId = async (req, res) => {
   try {
@@ -564,4 +590,52 @@ const updateBookByCurrentUser = async (req, res) => {
   }
 };
 
-module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks};
+//get all  chapter by book id
+const getChaptersByBookId = async (req, res) => {
+  try {
+    const { book_id } = req.params;
+
+    if (!book_id) {
+      return res.status(400).json({ error: "book_id is required" });
+    }
+
+    const chapters = await Chapter.findAll({
+      where: { book_id },
+      include: [Topic],
+    });
+
+    if (!chapters) {
+      return res.status(404).json({ error: "Chapters not found for the given book_id" });
+    }
+
+    res.status(200).json({ chapters });
+  } catch (error) {
+    console.error("Error fetching chapters by book ID:", error.message || error);
+    res.status(500).json({ error: "Something went wrong while fetching the chapters." });
+  }
+};
+//get all topics by book id and chapter id
+const getTopicsByBookIdAndChapterId = async (req, res) => {
+  try {
+    const { book_id, chapter_id } = req.params;
+
+    if (!book_id || !chapter_id) {
+      return res.status(400).json({ error: "book_id and chapter_id are required" });
+    }
+
+    const topics = await Topic.findAll({
+      where: { book_id, chapter_id },
+    });
+
+    if (!topics) {
+      return res.status(404).json({ error: "Topics not found for the given book_id and chapter_id" });
+    }
+
+    res.status(200).json({ topics });
+  } catch (error) {
+    console.error("Error fetching topics by book ID and chapter ID:", error.message || error);
+    res.status(500).json({ error: "Something went wrong while fetching the topics." });
+  }
+};
+
+module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks, getChaptersByBookId, getTopicsByBookIdAndChapterId,getBooksByUserIdandpublic};

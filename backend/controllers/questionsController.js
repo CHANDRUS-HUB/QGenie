@@ -16,7 +16,7 @@ const { Op } = require("sequelize");
 const OpenAI = require("openai");
 const mammoth = require("mammoth");
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: '',
 });
 
 
@@ -32,7 +32,7 @@ const generateQuestionsFromText = async (textpath, no_of_questions_by_difficulty
         },
         {
           role: "user",
-          content: `Generate ${number_of_questions} questions based on the below content.
+          content: `Generate ${no_of_questions_by_difficulty} questions based on the below content.
 Each question should have:
 - question: string,
 - options: array of 4 options (A, B, C, D),
@@ -51,7 +51,7 @@ Respond in this JSON format:
 }
 
 Here is the content:
-${text}`
+${textpath}`
         }
       ],
       temperature: 0.3,
@@ -115,23 +115,32 @@ const createQuestion = async (req, res) => {
       hard: await generateQuestionsFromText(text, no_of_questions_by_difficulty.hard),
     };
 
+    const allGeneratedQuestions = [
+      ...generatedQuestions.easy.questions,
+      ...generatedQuestions.medium.questions,
+      ...generatedQuestions.hard.questions,
+    ];
+
+    if (!allGeneratedQuestions || allGeneratedQuestions.length === 0) {
+      return res.status(500).json({ message: "Failed to generate questions" });
+    }
+
     if (!generatedQuestions) {
       return res.status(500).json({ message: "Failed to generate questions" });
     }
 
     const createdQuestions = await Promise.all(
-      generatedQuestions.questions.map(item =>
-        Question.create({
-          book_id,
-          chapter_id,
-          topic_id,
-          user_id,
-          question_type,
-          no_of_questions_by_difficulty,
-          all_questions,
-          options,
-          answer,
-        })
+      allGeneratedQuestions.map(item =>
+      Question.create({
+        book_id,
+        chapter_id,
+        topic_id,
+        user_id,
+        question_type,
+        question: item.question,
+        options: item.options,
+        answer: item.answer,
+      })
       )
     );
 
@@ -142,7 +151,7 @@ const createQuestion = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating question:', error);
-    return res.status(500).json({ message: 'Internal server error', error });
+    return res.status(500).json({ message: 'failed to generate questions', error });
   }
 };
 

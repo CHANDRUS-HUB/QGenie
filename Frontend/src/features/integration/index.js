@@ -142,7 +142,7 @@ return (
                     <div className="mt-6 flex justify-end">
                         <button
                             onClick={() => editIntegration(index)}
-                            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-sm font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                            className="inline-flex items-center gap-2 px-5 py-2 rounded-full  bg-gradient-to-r from-green-500 to-lime-400 text-white text-sm font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -283,7 +283,7 @@ return (
     <div className="modal-action mt-10">
       <div className="flex gap-4 w-full">
         <button
-          className="btn btn-outline w-1/2 border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="btn btn-outline w-1/2 border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-black-100 dark:hover:bg-gray-800"
           onClick={() => setIsEditModalOpen(false)}
         >
           Cancel
@@ -292,7 +292,7 @@ return (
         <button
           type="button"
           onClick={handleSaveIntegration}
-          className="btn btn-primary w-1/2 bg-primary text-white hover:bg-primary-dark transition-all"
+          className="btn  bg-gradient-to-r from-green-500 to-lime-400 w-1/2 bg-primary text-white hover:bg-gray-700 transition-all"
         >
           Save
         </button>
