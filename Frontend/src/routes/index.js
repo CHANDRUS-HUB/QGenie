@@ -25,6 +25,7 @@ const routes = [
   {
     path: '/dashboard', // the url
     component: Dashboard, // view rendered
+
   },
   {
     path: '/welcome', // the url

@@ -75,10 +75,12 @@ const calculateFileHash = (filePath) => {
   });
 };
 
+
 const OpenAI = require("openai");
 const mammoth = require("mammoth");
 const openai = new OpenAI({
   apiKey: '',
+  baseURL: 'https://openrouter.ai/api/v1',
 });
 const extractMetadataFromFile = async (filePath) => {
   try {
@@ -100,7 +102,8 @@ const extractMetadataFromFile = async (filePath) => {
     console.log("Word count:", wordCount);
     console.log("Extracted text length:", text.length);
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      // model: "gpt-3.5-turbo",
+      model: "mistralai/mistral-7b-instruct",
       messages: [
         {
           role: "system",
@@ -111,8 +114,7 @@ const extractMetadataFromFile = async (filePath) => {
           content: `Analyze the book content and return a JSON object with the following format:
   {
     "title": "...", 
-    "medium": "English or Tamil or any other languages — identify the language of the content", 
-    "totalChapters": 0, 
+    "medium": "English or Tamil or any other languages — identify the language of the content",  
     "chapters": [
       { 
         "chapterName": "...", 
@@ -120,6 +122,7 @@ const extractMetadataFromFile = async (filePath) => {
       },
       ...
     ],
+    "totalChapters": 0,
     "totalTopics": 0, 
    
   }
@@ -528,6 +531,41 @@ const getPublicBooks = async (req, res) => {
   }
 };
 
+//delete current user uploaded book
+ 
+const deleteBookByCurrentUser = async (req, res) => {
+  try {
+    const { book_id } = req.params;
+
+    if (!book_id) {
+      return res.status(400).json({ error: "book_id is required" });
+    }
+
+    const userId = req.user.id; // Ensure userId is defined
+    const book = await Book.findOne({
+      where: {
+        book_id,
+        [Op.or]: [
+          { user_id: userId }
+        ]
+      }
+    });
+
+    if (!book) {
+      return res.status(404).json({ error: "Book not found " });
+    }
+
+    // Delete the book
+    await book.destroy();
+
+    res.status(200).json({ message: "Book deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting book:", error.message || error);
+    res.status(500).json({ error: "Something went wrong while deleting the book." });
+  }
+}
+
+
 //get book by book id
 const getBookById = async (req, res) => {
   try {
@@ -638,4 +676,4 @@ const getTopicsByBookIdAndChapterId = async (req, res) => {
   }
 };
 
-module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks, getChaptersByBookId, getTopicsByBookIdAndChapterId,getBooksByUserIdandpublic};
+module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks, getChaptersByBookId, getTopicsByBookIdAndChapterId,getBooksByUserIdandpublic,deleteBookByCurrentUser};

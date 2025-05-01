@@ -2,7 +2,6 @@ import React, { lazy, useEffect, useState } from 'react'
 import './App.css';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import { themeChange } from 'theme-change'
-import checkAuth from './app/auth';
 import initializeApp from './app/init';
 import GlobalNotification from './containers/GlobalNotification';
 import axios from "axios";
@@ -21,6 +20,7 @@ initializeApp()
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userRole, SetUserRole] = useState("");
 
   useEffect(() => {
     // Initialize daisy UI themes
@@ -32,6 +32,7 @@ function App() {
         const response = await axios.get(`${baseUrl}/profile`, { withCredentials: true });
         if (response.status === 200) {
           setIsAuthenticated(true);
+          SetUserRole(response.data.role);
         }
       } catch (error) {
         setIsAuthenticated(false);
@@ -47,8 +48,16 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>; 
+    return (
+      <div className="flex items-center justify-center h-screen">
+      <div className="text-center">
+        <p className="mb-4">Loading...</p>
+        <div className="w-12 h-12 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin"></div>
+      </div>
+      </div>
+    );
   }
+  
 
   return (
     <>
@@ -66,7 +75,7 @@ function App() {
           {/* Protected routes */}
           <Route
             path="/app/*"
-            element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}
+            element={isAuthenticated ? <Layout userRole={userRole} /> : <Navigate to="/login" replace />}
           />
 
           {/* Redirect all other routes */}

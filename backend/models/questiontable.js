@@ -21,26 +21,39 @@ const Question = sequelize.define('question', {
       'long_answer',
       'true_or_false',
       'multiple_choice',
-      'comprehension'
     ),
     allowNull: false,
   },
 
-
- no_of_questions_by_difficulty: {
-    type: DataTypes.JSON, // Use JSON to store the question breakdown by difficulty
-    defaultValue: { easy: 1, medium: 1, hard: 1 }, // Default breakdown (all set to 0)
-    allowNull: false, // Ensure the column is always populated
+ //no of question for easy
+ no_of_questions_easy: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+ //no of question for medium
+ no_of_questions_medium: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+ //no of question for hard
+ no_of_questions_hard: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
 
   all_questions: { 
     type: DataTypes.JSONB,
     //  allowNull: false
-     },
+  },
+  difficulty_level: {
+    type: DataTypes.ENUM('easy', 'medium', 'hard'),
+    allowNull: false,
+  },
+  
 
   options: {
-    type: DataTypes.JSONB, // null for descriptive, comprehension
-    allowNull: true,
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    // allowNull: false,
   },
 
   answer: {

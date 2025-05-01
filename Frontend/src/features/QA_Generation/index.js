@@ -217,7 +217,7 @@ setTopics([]); // Clear topics if no chapters are found
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-6 text-center rounded-xl shadow-xl bg-white/50 p-6 w-full"
+          className="mb-6 text-center rounded-xl shadow-xl dark:shadow-green-600 bg-white/0 dark:shadow-md p-6 w-full max-w-5xl mx-auto"
         >
           <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent drop-shadow-md">
             QGENIE <span className="font-light">Questions Generator</span>

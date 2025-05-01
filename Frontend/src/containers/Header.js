@@ -120,7 +120,7 @@ function Header(){
 <Toaster />
  {/* Logout Confirmation Modal */}
  {showLogoutModal && (
-        <dialog id="logout_modal" className="modal modal-open">
+        <dialog id="logout_modal" className="modal modal-open ">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Confirm Logout</h3>
             <p className="py-4">Are you sure you want to logout?</p>

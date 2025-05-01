@@ -9,10 +9,14 @@ import { useEffect, useRef } from "react"
 const Page404 = lazy(() => import('../pages/protected/404'))
 
 
-function PageContent(){
+function PageContent({ userRole }){
     const mainContentRef = useRef(null);
     const {pageTitle} = useSelector(state => state.header)
-
+    const filteredRoutes = routes.filter(route => {
+        // Hide dashboard for Teachers
+        if (route.path === "/dashboard" && userRole === "Teacher") return false;
+        return true;
+      });
 
     // Scroll back to top on new page load
     useEffect(() => {
@@ -29,13 +33,12 @@ function PageContent(){
                 <Suspense fallback={<SuspenseContent />}>
                         <Routes>
                             {
-                                routes.map((route, key) => {
+                                 filteredRoutes.map((route, key) => {
                                     return(
                                         <Route
-                                            key={key}
-                                            exact={true}
-                                            path={`${route.path}`}
-                                            element={<route.component />}
+                                        key={key}
+                                        path={route.path}
+                                        element={<route.component />}
                                         />
                                     )
                                 })

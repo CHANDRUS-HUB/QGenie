@@ -1,14 +1,56 @@
+import { motion } from 'framer-motion';
+
 function TemplatePointers() {
     return (
-        <>
-            <h1 className="text-1xl mt-8 font-bold">Automated Question Bank Generation</h1>
-            <p className="py-2 mt-4">✓ <span className="font-semibold">AI-driven question generation</span> based on topic and difficulty</p>
-            {/* <p className="py-2">✓ <span className="font-semibold">LLM-powered</span> model ensures high-quality, diverse questions</p> */}
-            <p className="py-2">✓ <span className="font-semibold">Automated categorization</span> of questions (MCQs, True/False, Short Answer)</p>
-            <p className="py-2">✓ Customizable <span className="font-semibold">question banks</span> with easy filtering options</p>
-            {/* <p className="py-2 mb-4">✓ <span className="font-semibold">User-friendly UI</span> with clear documentation for seamless integration</p> */}
-        </>
-    )
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+        >
+            <motion.h1
+                className="text-2xl mt-5 font-bold text-center"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+            >
+                Automated Question Bank Generation
+            </motion.h1>
+            <motion.div
+                className="mt-6 space-y-4"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: {
+                            staggerChildren: 0.2,
+                        },
+                    },
+                }}
+            >
+                <motion.p
+                    className="py-2 flex items-center"
+                    variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+                >
+                    ✓ <span className="font-semibold ml-2">AI-driven question generation</span> based on topic and difficulty
+                </motion.p>
+                <motion.p
+                    className="py-2 flex items-center"
+                    variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+                >
+                    ✓ <span className="font-semibold ml-2">Automated categorization of questions (MCQs, True/False, Short Answer) </span> 
+                </motion.p>
+                <motion.p
+                    className="py-2 flex items-center"
+                    variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+                >
+                    ✓ Customizable <span className="font-semibold ml-2">question banks</span> with easy filtering options
+                </motion.p>
+            </motion.div>
+        </motion.div>
+    );
 }
 
 export default TemplatePointers;
