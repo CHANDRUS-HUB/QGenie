@@ -35,7 +35,7 @@ function DashboardTopBar({updateDashboardPeriod}){
     return(
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="">
-            <Datepicker 
+            {/* <Datepicker 
                 containerClassName="w-72 " 
                 value={dateValue} 
                 theme={"light"}
@@ -45,7 +45,7 @@ function DashboardTopBar({updateDashboardPeriod}){
                 onChange={handleDatePickerValueChange} 
                 showShortcuts={true} 
                 primaryColor={"white"} 
-            /> 
+            />  */}
             {/* <SelectBox 
                 options={periodOptions}
                 labelTitle="Period"
@@ -56,7 +56,7 @@ function DashboardTopBar({updateDashboardPeriod}){
                 updateFormValue={updateSelectBoxValue}
             /> */}
             </div>
-            <div className="text-right ">
+            {/* <div className="text-right ">
                 <button className="btn btn-ghost btn-sm normal-case"><ArrowPathIcon className="w-4 mr-2"/>Refresh Data</button>
                 <button className="btn btn-ghost btn-sm normal-case  ml-2"><ShareIcon className="w-4 mr-2"/>Share</button>
 
@@ -67,7 +67,7 @@ function DashboardTopBar({updateDashboardPeriod}){
                         <li><a><ArrowDownTrayIcon className="w-4"/>Download</a></li>
                     </ul>
                 </div>
-            </div>
+            </div> */}
         </div>
     )
 }

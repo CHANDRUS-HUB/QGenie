@@ -11,11 +11,10 @@ function LeftSidebar({ userRole }) {
         document.getElementById('left-sidebar-drawer').click(); // Close sidebar
     }
     const filteredRoutes = routes.filter(route => {
-        // Hide dashboard for Teachers
-        if (route.path === "/app/dashboard" && userRole === "Teacher") return false;
+        // Hide dashboard and /app/Users for Teachers
+        if ((route.path === "/app/dashboard" || route.path === "/app/Users") && userRole === "Teacher") return false;
         return true;
-      });
- 
+    });
     const handleNavLinkClick = (path) => {
         close(); // Close sidebar
         navigate(path); // Navigate to the selected route

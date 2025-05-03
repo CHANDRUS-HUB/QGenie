@@ -60,6 +60,7 @@ const Question = sequelize.define('question', {
     type: DataTypes.JSONB,
     // allowNull: false,
   },
+  question_ispublic: { type: DataTypes.BOOLEAN, defaultValue: false },
 
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },

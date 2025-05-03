@@ -169,7 +169,7 @@ function Integration() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2 items-end">
               <div className="col-span-2">
                 <label
                   htmlFor="search"
@@ -212,7 +212,15 @@ function Integration() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="col-span-1 ">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Total Books: {integrationList.length}
+              </h2>
+              <p className="text-gray-500 text-sm dark:text-gray-400">
+                {integrationList.length} books available for you to explore.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 mt-2 lg:grid-cols-3 gap-8">
               {filteredBooks.map((integration, index) => (
                 <div
                   key={integration.book_id}

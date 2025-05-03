@@ -1,8 +1,10 @@
 // All components mapping with path for internal routes
 
 import { lazy } from 'react'
+// const  ViewBook =lazy(() => import('../features/viewbook/ViewBook')) 
 
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
+
 const Welcome = lazy(() => import('../pages/protected/Welcome'))
 const Page404 = lazy(() => import('../pages/protected/404'))
 const Blank = lazy(() => import('../pages/protected/Blank'))
@@ -19,6 +21,7 @@ const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const GettingStarted = lazy(() => import('../pages/GettingStarted'))
 const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
+const ViewUserBook = lazy(() => import('../pages/protected/ViewBook'))
 
 
 const routes = [
@@ -27,6 +30,12 @@ const routes = [
     component: Dashboard, // view rendered
 
   },
+  // {
+  //   path: '/users', // the url
+  //   component: Users, // view rendered
+
+  // },
+
   {
     path: '/welcome', // the url
     component: Welcome, // view rendered
@@ -49,9 +58,14 @@ const routes = [
     component: Calendar,
   },
   {
-    path: '/transactions',
+    path: '/Users',
     component: Transactions,
   },
+  {
+    path: '/Users/view-book/:id',
+    component: ViewUserBook,
+  },
+
   {
     path: '/settings-profile',
     component: ProfileSettings,
@@ -92,6 +106,7 @@ const routes = [
     path: '/blank',
     component: Blank,
   },
+ 
 ]
 
 export default routes

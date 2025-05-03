@@ -163,7 +163,7 @@ function ProfileSettings() {
 
                 <div className="mt-16">
                     <button
-                        className={`btn btn-primary float-right ${loading ? "loading" : ""}`}
+                        className={`btn  bg-gradient-to-r from-green-500 to-lime-500 text-white float-right ${loading ? "loading" : ""}`}
                         onClick={updateProfile}
                         disabled={loading}
                     >

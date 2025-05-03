@@ -12,9 +12,7 @@ import UserChannels from './components/UserChannels'
 import DashboardTopBar from './components/DashboardTopBar'
 
 import UserGroupIcon from '@heroicons/react/24/outline/UserGroupIcon'
-import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
-import CircleStackIcon from '@heroicons/react/24/outline/CircleStackIcon'
-import CreditCardIcon from '@heroicons/react/24/outline/CreditCardIcon'
+import { FaBook, FaBookOpen, FaLock } from 'react-icons/fa'
 
 import { useDispatch } from 'react-redux'
 import { showNotification } from '../common/headerSlice'
@@ -24,6 +22,7 @@ function Dashboard() {
     const [statsData, setStatsData] = useState([])
     const [userGrowthData, setUserGrowthData] = useState([])
     const [bookDistributionData, setBookDistributionData] = useState([])
+    const [barChartData, setBarChartData] = useState([])
 
     const fetchDashboardData = async () => {
         try {
@@ -42,25 +41,25 @@ function Dashboard() {
                 {
                     title: 'Total Users',
                     value: users.length,
-                    icon: <UserGroupIcon className="w-8 h-8" />,
-                    description: '↗︎ Live Users Count',
+                    icon: <UserGroupIcon className="w-8 h-8 text-blue-500" />,
+                    description: '↗︎ Users Count',
                 },
                 {
                     title: 'Total Books',
                     value: books.length,
-                    icon: <CreditCardIcon className="w-8 h-8" />,
+                    icon: <FaBook className="w-8 h-8 text-sky-500" />,
                     description: '↗︎ All Books',
                 },
                 {
                     title: 'Public Books',
                     value: publicBooks.length,
-                    icon: <CircleStackIcon className="w-8 h-8" />,
+                    icon: <FaBookOpen className="w-8 h-8 text-green-600" />,
                     description: 'Accessible by everyone',
                 },
                 {
                     title: 'Private Books',
                     value: books.length - publicBooks.length,
-                    icon: <UsersIcon className="w-8 h-8" />,
+                    icon: <FaLock className="w-8 h-8 text-red-500" />,
                     description: 'Restricted access books',
                 },
             ]
@@ -83,6 +82,14 @@ function Dashboard() {
                 private: books.length - publicBooks.length,
             }
             setBookDistributionData(bookDistribution)
+
+            // Bar Chart Data
+            const barData = [
+                { label: 'Total Books', value: books.length },
+                { label: 'Public Books', value: publicBooks.length },
+                { label: 'Private Books', value: books.length - publicBooks.length },
+            ]
+            setBarChartData(barData)
         } catch (err) {
             dispatch(showNotification({ message: 'Failed to load dashboard data', status: 0 }))
         }
@@ -115,7 +122,7 @@ function Dashboard() {
             {/* Charts */}
             <div className="grid lg:grid-cols-2 mt-4 grid-cols-1 gap-6">
                 <LineChart data={userGrowthData} />
-                <BarChart data={statsData} />
+                <BarChart data={barChartData} />
             </div>
 
             {/* More Stats */}

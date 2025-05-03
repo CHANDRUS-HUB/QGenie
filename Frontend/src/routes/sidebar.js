@@ -31,7 +31,7 @@ const routes = [
     path: '/app/dashboard',
     icon: <Squares2X2Icon className={iconClasses} />,
     name: 'Dashboard',
-    condition: (user) => user.role === 'Admin', // Only show for Admin users
+   
   },
   
   {
@@ -48,15 +48,21 @@ const routes = [
     ), // icon component
     name: 'Q&A Generation', // name that appears in Sidebar
   },
-  // {
-  //   path: '/app/transactions', // url
-  //   icon: <CurrencyDollarIcon className={iconClasses}/>, // icon component
-  //   name: 'Transactions', // name that appear in Sidebar
-  // },
+  {
+    path: '/app/Users', // url
+    icon: <UsersIcon className={iconClasses}/>, // icon component
+    name: 'Users', // name that appear in Sidebar
+  },
   // {
   //   path: '/app/charts', // url
   //   icon: <ChartBarIcon className={iconClasses}/>, // icon component
   //   name: 'Analytics', // name that appear in Sidebar
+  // },
+  // {
+  //   path: '/app/Users',
+  //   icon: <Squares2X2Icon className={iconClasses} />,
+  //   name: 'Users',
+  //    // Only show for Admin users
   // },
   {
     path: '/app/userBooks', // url
@@ -66,7 +72,7 @@ const routes = [
       </svg>
     ),
     // icon: <BoltIcon className={iconClasses}/>, // icon component
-    name: 'User Books', // name that appear in Sidebar
+    name: 'My Books', // name that appear in Sidebar
   },
 
   {

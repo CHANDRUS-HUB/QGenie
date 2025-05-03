@@ -136,8 +136,15 @@ const extractMetadataFromFile = async (filePath) => {
 
 
 
-    console.log("OpenAI response:", response.choices[0].message.content);
-    return JSON.parse(response.choices[0].message.content);
+   
+const content = response?.choices?.[0]?.message?.content;
+if (!content) {
+  throw new Error("AI response is empty or malformed. Check model compatibility or error.");
+}
+
+console.log("OpenAI response:", content);
+
+return JSON.parse(content);
   } catch (error) {
     console.error("Metadata extraction error:", error);
    
@@ -380,10 +387,7 @@ const chapterEntry = async (req, res) => {
     });
   }
 };
-
-
 //topic entry
-
 const topicEntry = async (req, res) => {
   try {
     const { book_id, chapter_id, topic_name } = req.body;
@@ -437,6 +441,9 @@ const topicEntry = async (req, res) => {
     });
   }
 };
+
+
+
 //get all books in the data base with chapters and topics
 const getAllBooks = async (req, res) => {
   try {
@@ -511,12 +518,52 @@ const getBooksByUserId = async (req, res) => {
   }
 };
 
+const getBooksBychoosenUserId = async (req, res) => {
+  try {
+    const userId = req.params.user_id;
+    if (!userId) {
+      return res.status(400).json({ error: "user_id is required" });
+    }
+    // Check if the user exists
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const books = await Book.findAll({
+      where: {
+        [Op.or]: [{ user_id: userId }],
+      },
+      include: [
+        {
+          model: Chapter,
+          include: [Topic],
+        },
+        {
+          model: User, // ✅ Include the User
+          attributes: ['username'], // Optional: only get username
+        },
+      ],
+    });
+    
+
+    res.status(200).json({ books });
+  } catch (error) {
+    console.error("Error fetching books by user ID:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 //get all books which are public that is true
 const getPublicBooks = async (req, res) => {
   try {
     const books = await Book.findAll({
       where: { book_ispublic: true },
       include: [
+        {
+          model: User,
+          attributes: ['id', 'username', 'email', 'role'],
+        },
         {
           model: Chapter,
           include: [Topic],
@@ -628,7 +675,7 @@ const updateBookByCurrentUser = async (req, res) => {
   }
 };
 
-//get all  chapter by book id
+//get all multiple chapter by book id
 const getChaptersByBookId = async (req, res) => {
   try {
     const { book_id } = req.params;
@@ -655,25 +702,33 @@ const getChaptersByBookId = async (req, res) => {
 //get all topics by book id and chapter id
 const getTopicsByBookIdAndChapterId = async (req, res) => {
   try {
-    const { book_id, chapter_id } = req.params;
+    const book_id = parseInt(req.query.book_id);
+    const chapter_ids = req.query.chapter_ids 
+      ? req.query.chapter_ids.split(",").map(id => parseInt(id.trim())) 
+      : [];
 
-    if (!book_id || !chapter_id) {
-      return res.status(400).json({ error: "book_id and chapter_id are required" });
+    if (!book_id || !Array.isArray(chapter_ids) || chapter_ids.length === 0) {
+      return res.status(400).json({ error: "book_id and an array of chapter_ids are required" });
     }
 
     const topics = await Topic.findAll({
-      where: { book_id, chapter_id },
+      where: {
+        book_id,
+        chapter_id: {
+          [Op.in]: chapter_ids,
+        },
+      },
     });
 
-    if (!topics) {
-      return res.status(404).json({ error: "Topics not found for the given book_id and chapter_id" });
+    if (!topics || topics.length === 0) {
+      return res.status(404).json({ error: "Topics not found for the given book_id and chapter_ids" });
     }
 
     res.status(200).json({ topics });
   } catch (error) {
-    console.error("Error fetching topics by book ID and chapter ID:", error.message || error);
+    console.error("Error fetching topics by selected chapters:", error.message || error);
     res.status(500).json({ error: "Something went wrong while fetching the topics." });
   }
 };
 
-module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks, getChaptersByBookId, getTopicsByBookIdAndChapterId,getBooksByUserIdandpublic,deleteBookByCurrentUser};
+module.exports = { uploadBook, chapterEntry, getAllBooks, getBooksByUserId, topicEntry, getBookById , updateBookByCurrentUser, getPublicBooks, getChaptersByBookId, getTopicsByBookIdAndChapterId,getBooksByUserIdandpublic,deleteBookByCurrentUser,getBooksBychoosenUserId};

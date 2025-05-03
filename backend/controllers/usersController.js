@@ -291,6 +291,26 @@ const updateUser = async (req, res) => {
     }
 };
 
+//get all users
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] }, // Exclude the password field
+              include: [
+                {
+                    model: Book,
+                    as: 'Books',
+                    attributes: ['book_id', 'title'], // Include only the necessary fields
+                },
+            ],
+        
+        });
+        res.status(200).json({ message: "All users", users });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
 
 // Delete user
 const deleteUser = async (req, res) => {
@@ -312,17 +332,7 @@ const deleteUser = async (req, res) => {
     }
 };
 
-//get all users
-const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.findAll({
-            attributes: { exclude: ['password'] } // Exclude the password field
-        });
-        res.status(200).json({ message: "All users", users });
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error", error: error.message });
-    }
-};
+
 
 
 module.exports = {
