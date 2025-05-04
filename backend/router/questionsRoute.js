@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 
-const {createQuestion, getAllQuestions, getQuestionById, updateQuestion, deleteQuestion, getPublicQuestions} = require("../controllers/questionsController");
+const {createQuestion, getAllQuestions, getQuestionById, updateQuestion, deleteQuestion, getPublicQuestions, updateQuestionById, deleteQuestionById, getMultipleQuestionsById} = require("../controllers/questionsController");
 const protectRoute = require("../middleware/protectRoute");
 
 
@@ -18,8 +18,13 @@ router.get("/get-question/:id",protectRoute, getQuestionById);
 router.put("/update-question/:id",protectRoute, updateQuestion);
 // Route to delete a question
 router.delete("/delete-question/:id",protectRoute, deleteQuestion);
-// Route to get questions by user ID    
+// Route to get multiple questions by question IDs
+router.post("/get-multiple-questions",protectRoute, getMultipleQuestionsById);    
 
+//route to update question by current user
+router.put("/update-question-by-currentuser",protectRoute, updateQuestionById);
+// Route to delete question by current user
+router.post("/delete-question-by-currentuser",protectRoute, deleteQuestionById);
 
 
 module.exports = router;

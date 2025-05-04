@@ -2,6 +2,18 @@
   text-align: center;
 }
 
+
+@media print {
+  #question-export {
+    background-color: white;
+    color: black;
+  }
+}
+
+
+
+
+
 .App-logo {
   height: 40vmin;
   pointer-events: none;

@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+@media print {
+  #question-export {
+    background-color: white;
+    color: black;
+  }
+}
+
 .loading-indicator:before {
     content: '';
     background: #00000080;

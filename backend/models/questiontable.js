@@ -58,7 +58,7 @@ const Question = sequelize.define('question', {
 
   answer: {
     type: DataTypes.JSONB,
-    // allowNull: false,
+    allowNull: false,
   },
   question_ispublic: { type: DataTypes.BOOLEAN, defaultValue: false },
 
