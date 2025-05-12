@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 
-const {createQuestion, getAllQuestions, getQuestionById, updateQuestion, deleteQuestion, getPublicQuestions, updateQuestionById, deleteQuestionById, getMultipleQuestionsById} = require("../controllers/questionsController");
+const {createQuestion, getAllQuestions, getQuestionById, updateQuestion, deleteQuestion, getPublicQuestions, updateQuestionById, deleteQuestionById, getMultipleQuestionsById, getAllQuestionsByUser} = require("../controllers/questionsController");
 const protectRoute = require("../middleware/protectRoute");
 
 
@@ -10,6 +10,10 @@ const protectRoute = require("../middleware/protectRoute");
 router.post("/create-question",protectRoute, createQuestion);
 // Route to get all questions
 router.get("/get-all-questions",protectRoute, getAllQuestions);
+
+//route to get all questions by current user
+ router.get("/get-all-questions-by-currentuser",protectRoute, getAllQuestionsByUser);
+
 //route to get all public questions
  router.get("/get-all-public-questions",protectRoute, getPublicQuestions);
 // Route to get a question by ID

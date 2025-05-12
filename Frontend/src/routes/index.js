@@ -22,7 +22,7 @@ const GettingStarted = lazy(() => import('../pages/GettingStarted'))
 const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
 const ViewUserBook = lazy(() => import('../pages/protected/ViewBook'))
-
+const Generated_Questions=lazy(() => import('../pages/protected/Generated_Questons.js'))
 
 const routes = [
   {
@@ -60,6 +60,10 @@ const routes = [
   {
     path: '/Users',
     component: Transactions,
+  },
+  {
+    path: '/generatedquestions',
+    component: Generated_Questions,
   },
   {
     path: '/Users/view-book/:id',

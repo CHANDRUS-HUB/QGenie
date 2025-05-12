@@ -74,7 +74,15 @@ const routes = [
     // icon: <BoltIcon className={iconClasses}/>, // icon component
     name: 'My Books', // name that appear in Sidebar
   },
-
+  {
+    path: '/app/generatedquestions', // url
+    icon: (
+      <div className="w-6 h-5 flex items-center ">
+        <RiBookShelfLine className="w-6 h-6" />
+      </div>
+    ), // icon component
+    name: 'Generated Questions', // name that appears in Sidebar
+  },
   {
     path: '/app/publicBooks', // url
     icon: (

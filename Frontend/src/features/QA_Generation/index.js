@@ -189,6 +189,13 @@ export default function QuestionGeneratorUI() {
         toast.error("No questions were generated. Please try again.");
       }
     } catch (error) {
+      const response = error.response;
+      if (401 === response.status) {
+        toast.error("Session expired. Please login again.");
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      }
       console.error("Error generating questions:", error);
       toast.error("Failed to generate questions. Please try again later.");
     } finally {
@@ -196,192 +203,192 @@ export default function QuestionGeneratorUI() {
     }
   };
 
-  // const generateQuestions = async () => {
-  //   await handleGenerateQuestions();
-  // };
-
-  const testing = async () => {
-    const questionIds = [
-      {
-        question_ispublic: false,
-        question_id: 86,
-        book_id: 6,
-        chapter_id: 1,
-        topic_id: 3,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The Automated Question Bank Generation System uses Large Language Models (LLMs) and Generative AI.",
-        difficulty_level: "easy",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.915Z",
-        updated_at: "2025-05-04T05:58:02.915Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 87,
-        book_id: 6,
-        chapter_id: 2,
-        topic_id: 4,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "Existing digital platforms offer question bank repositories with real-time adaptability.",
-        difficulty_level: "easy",
-        answer: "False",
-        created_at: "2025-05-04T05:58:02.934Z",
-        updated_at: "2025-05-04T05:58:02.934Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 88,
-        book_id: 6,
-        chapter_id: 1,
-        topic_id: 3,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The proposed approach includes automating metadata extraction like subject and chapter count.",
-        difficulty_level: "easy",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.943Z",
-        updated_at: "2025-05-04T05:58:02.943Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 89,
-        book_id: 6,
-        chapter_id: 2,
-        topic_id: 4,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system architecture of the Automated Question Bank Generation System involves AI integration using Gemini and OpenAI ChatGPT API.",
-        difficulty_level: "medium",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.950Z",
-        updated_at: "2025-05-04T05:58:02.950Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 90,
-        book_id: 6,
-        chapter_id: 1,
-        topic_id: 3,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system's advantages include manual question paper creation being efficient and requiring less effort.",
-        difficulty_level: "medium",
-        answer: "False",
-        created_at: "2025-05-04T05:58:02.957Z",
-        updated_at: "2025-05-04T05:58:02.957Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 91,
-        book_id: 6,
-        chapter_id: 2,
-        topic_id: 4,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system's proposed future enhancements involve bias detection and ethical standards.",
-        difficulty_level: "medium",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.962Z",
-        updated_at: "2025-05-04T05:58:02.962Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 92,
-        book_id: 6,
-        chapter_id: 1,
-        topic_id: 3,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system's proposed future enhancements include integration with multimedia question generation for a more engaging learning experience.",
-        difficulty_level: "medium",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.972Z",
-        updated_at: "2025-05-04T05:58:02.972Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 93,
-        book_id: 6,
-        chapter_id: 2,
-        topic_id: 4,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system's proposed future enhancements do not include real-time collaboration tools for educators.",
-        difficulty_level: "medium",
-        answer: "False",
-        created_at: "2025-05-04T05:58:02.976Z",
-        updated_at: "2025-05-04T05:58:02.976Z",
-        options: ["True", "False"],
-      },
-      {
-        question_ispublic: false,
-        question_id: 94,
-        book_id: 6,
-        chapter_id: 1,
-        topic_id: 3,
-        user_id: 3,
-        question_type: "true_or_false",
-        no_of_questions_easy: 3,
-        no_of_questions_medium: 5,
-        no_of_questions_hard: 1,
-        all_questions:
-          "The system's proposed future enhancements could involve multi-language support for global accessibility.",
-        difficulty_level: "hard",
-        answer: "True",
-        created_at: "2025-05-04T05:58:02.979Z",
-        updated_at: "2025-05-04T05:58:02.979Z",
-        options: ["True", "False"],
-      },
-    ].map((question) => question.question_id); // This is an array of question_id
-    setGeneratedQuestionsID(questionIds);
-
-    // 👇 Fetch full question data
-    const questions = await fetchMultipleQuestionsById(questionIds);
-    setFetchedQuestions(questions);
-
-    setShowModal(true);
+  const generateQuestions = async () => {
+    await handleGenerateQuestions();
   };
+
+  // const testing = async () => {
+  //   const questionIds = [
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 86,
+  //       book_id: 6,
+  //       chapter_id: 1,
+  //       topic_id: 3,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The Automated Question Bank Generation System uses Large Language Models (LLMs) and Generative AI.",
+  //       difficulty_level: "easy",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.915Z",
+  //       updated_at: "2025-05-04T05:58:02.915Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 87,
+  //       book_id: 6,
+  //       chapter_id: 2,
+  //       topic_id: 4,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "Existing digital platforms offer question bank repositories with real-time adaptability.",
+  //       difficulty_level: "easy",
+  //       answer: "False",
+  //       created_at: "2025-05-04T05:58:02.934Z",
+  //       updated_at: "2025-05-04T05:58:02.934Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 88,
+  //       book_id: 6,
+  //       chapter_id: 1,
+  //       topic_id: 3,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The proposed approach includes automating metadata extraction like subject and chapter count.",
+  //       difficulty_level: "easy",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.943Z",
+  //       updated_at: "2025-05-04T05:58:02.943Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 89,
+  //       book_id: 6,
+  //       chapter_id: 2,
+  //       topic_id: 4,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system architecture of the Automated Question Bank Generation System involves AI integration using Gemini and OpenAI ChatGPT API.",
+  //       difficulty_level: "medium",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.950Z",
+  //       updated_at: "2025-05-04T05:58:02.950Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 90,
+  //       book_id: 6,
+  //       chapter_id: 1,
+  //       topic_id: 3,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system's advantages include manual question paper creation being efficient and requiring less effort.",
+  //       difficulty_level: "medium",
+  //       answer: "False",
+  //       created_at: "2025-05-04T05:58:02.957Z",
+  //       updated_at: "2025-05-04T05:58:02.957Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 91,
+  //       book_id: 6,
+  //       chapter_id: 2,
+  //       topic_id: 4,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system's proposed future enhancements involve bias detection and ethical standards.",
+  //       difficulty_level: "medium",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.962Z",
+  //       updated_at: "2025-05-04T05:58:02.962Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 92,
+  //       book_id: 6,
+  //       chapter_id: 1,
+  //       topic_id: 3,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system's proposed future enhancements include integration with multimedia question generation for a more engaging learning experience.",
+  //       difficulty_level: "medium",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.972Z",
+  //       updated_at: "2025-05-04T05:58:02.972Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 93,
+  //       book_id: 6,
+  //       chapter_id: 2,
+  //       topic_id: 4,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system's proposed future enhancements do not include real-time collaboration tools for educators.",
+  //       difficulty_level: "medium",
+  //       answer: "False",
+  //       created_at: "2025-05-04T05:58:02.976Z",
+  //       updated_at: "2025-05-04T05:58:02.976Z",
+  //       options: ["True", "False"],
+  //     },
+  //     {
+  //       question_ispublic: false,
+  //       question_id: 94,
+  //       book_id: 6,
+  //       chapter_id: 1,
+  //       topic_id: 3,
+  //       user_id: 3,
+  //       question_type: "true_or_false",
+  //       no_of_questions_easy: 3,
+  //       no_of_questions_medium: 5,
+  //       no_of_questions_hard: 1,
+  //       all_questions:
+  //         "The system's proposed future enhancements could involve multi-language support for global accessibility.",
+  //       difficulty_level: "hard",
+  //       answer: "True",
+  //       created_at: "2025-05-04T05:58:02.979Z",
+  //       updated_at: "2025-05-04T05:58:02.979Z",
+  //       options: ["True", "False"],
+  //     },
+  //   ].map((question) => question.question_id); // This is an array of question_id
+  //   setGeneratedQuestionsID(questionIds);
+
+  //   // 👇 Fetch full question data
+  //   const questions = await fetchMultipleQuestionsById(questionIds);
+  //   setFetchedQuestions(questions);
+
+  //   setShowModal(true);
+  // };
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -493,10 +500,11 @@ export default function QuestionGeneratorUI() {
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={{ fontSize: 20, marginBottom: 20 }}>Generated Questions</Text>
-        <Text style={{ fontSize: 12, marginBottom: 10 }}>Question Type:{fetchedQuestions.length > 0
-                    ? fetchedQuestions[0].question_type.replace(/_/g, " ")
-                    : "No Question Type Found"}
-                    </Text>
+        <Text style={{ fontSize: 12, marginBottom: 10 }}>
+          Question Type: {fetchedQuestions.length > 0
+            ? fetchedQuestions[0].question_type.replace(/_/g, " ")
+            : "No Question Type Found"}
+        </Text>
         {questions.map((q, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.question}>
@@ -505,11 +513,13 @@ export default function QuestionGeneratorUI() {
             <Text style={styles.question}>
               {i + 1}. {q.all_questions}
             </Text>
-            {q.options.map((opt, idx) => (
-              <Text key={idx} style={styles.option}>
-                {String.fromCharCode(65 + idx)}) {opt}
-              </Text>
-            ))}
+            {Array.isArray(q.options) && q.options.length > 0 && (
+              q.options.map((opt, idx) => (
+                <Text key={idx} style={styles.option}>
+                  {String.fromCharCode(65 + idx)}) {opt}
+                </Text>
+              ))
+            )}
             <Text style={styles.answer}>Answer: {q.answer}</Text>
           </View>
         ))}
@@ -531,7 +541,7 @@ export default function QuestionGeneratorUI() {
         <div style="margin-bottom: 20px;">
           <p><strong>Difficulty Level:</strong> ${q.difficulty_level}</p>
           <h3>Q${index + 1}. ${q.all_questions}</h3>
-        
+          
           <ul style="margin-left: 20px;">${optionsHtml}</ul>
           <p><strong>Answer:</strong> ${q.answer}</p>
             
@@ -889,7 +899,7 @@ export default function QuestionGeneratorUI() {
           </div>
         ) : (
           <button
-            onClick={testing}
+            onClick={generateQuestions}
             className="px-6 py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white text-lg font-semibold rounded-xl shadow-md hover:scale-105 transition"
           >
             ✨ Generate Questions

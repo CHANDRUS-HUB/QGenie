@@ -17,9 +17,8 @@ const { Op } = require("sequelize");
 const OpenAI = require("openai");
 const mammoth = require("mammoth");
 const openai = new OpenAI({
-  apiKey:
-    "",
-  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: '',
+  baseURL: 'https://openrouter.ai/api/v1',
 });
 
 function buildPrompt(
@@ -34,54 +33,49 @@ function buildPrompt(
   switch (question_type) {
     case "short_answer":
       format = `{
-        
-      "questions": [
-        {
-          "question_difficulty_level": "easy|medium|hard",
-          "question": "Your question here",
-          "answer": "provide atleast 100 words of answer",
-        }
-      ]
-    }`;
-      break;
-    case "long_answer":
-      format = `{
-        
-      "questions": [
-        {
-          "question_difficulty_level": "easy|medium|hard",
-          "question": "Your question here",
-          "answer": "provide 500 words of answer",
-        }
-      ]
-    }`;
-      break;
-    case "fill_in_the_blanks":
-      format = `{
-        
   "questions": [
     {
       "question_difficulty_level": "easy|medium|hard",
       "question": "Your question here",
-      "answer": "Your answer here only one answer"
+      "answer": "Provide at least 100 words of answer"
     }
   ]
 }`;
       break;
-
+    case "long_answer":
+      format = `{
+  "questions": [
+    {
+      "question_difficulty_level": "easy|medium|hard",
+      "question": "Your question here",
+      "answer": "Provide 500 words of answer"
+    }
+  ]
+}`;
+      break;
+    case "fill_in_the_blanks":
+      format = `{
+  "questions": [
+    {
+      "question_difficulty_level": "easy|medium|hard",
+      "question": "Your question here with _____ blank space",
+      "answer": "Your answer here (only one answer)"
+    }
+  ]
+}`;
+      break;
     case "true_or_false":
       format = `{
   "questions": [
     {
       "question_difficulty_level": "easy|medium|hard",
-      "question": "Your question here",
+      "question": "Your statement here",
       "options": ["True", "False"],
-      "answer": "True"
+      "answer": "True|False"
     }
   ]
 }`;
       break;
-
     case "multiple_choice":
       format = `{
   "questions": [
@@ -89,71 +83,62 @@ function buildPrompt(
       "question_difficulty_level": "easy|medium|hard",
       "question": "Your question here",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Option A"
+      "answer": "Correct option letter (A, B, C, or D) with answer"
     }
   ]
 }`;
       break;
-
     case "match_the_following":
       format = `{
   "questions": [
-     {
+    {
       "question_difficulty_level": "easy|medium|hard",
-      "question": "match the following 
-            states       captials         
-         a) tamilnadu -  Hyderabad     //shuffle the questions with wrong pairs
-         b) kerala - Amaravati
-         c) karnataka - Thiruvananthapuram
-         d) andhra pradesh -  Bengaluru
-         e) telangana - Chennai ",
+      "question": "Match the following items from column A to column B",
+      "pairs": {
+        "Column A": ["Item 1", "Item 2", "Item 3", "Item 4"],
+        "Column B": ["Match 1", "Match 2", "Match 3", "Match 4"]
+      },
       "options": [
-            "a-4,b-3,c-2,d-1",  //shuffled options for new questions
-            "a-1,b-2,c-3,d-4", //shuffled options for new questions
-            "a-2,b-3,c-4,d-1", //shuffled options for new questions
-            "a-1,b-2,c-3,d-4"   //shuffled options for new questions
-            ],
-      "answer": "Option A"
+        "1-3,2-4,3-1,4-2",
+        "1-2,2-3,3-4,4-1",
+        "1-4,2-1,3-2,4-3",
+        "1-1,2-2,3-3,4-4"
+      ],
+      "answer": "Correct option pattern"
     }
   ]
 }`;
       break;
-
     case "logical_reasoning":
       format = `{
   "questions": [
     {
       "question_difficulty_level": "easy|medium|hard",
-      "question": " 'statement': 'Your statement here',
-        'reasoning': 'Based on the above statement, which conclusion logically follows?'",
+      "question": "Your logical statement here",
+      "question": "Based on the above statement, which conclusion logically follows?",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Option B"
+      "answer": "Correct option letter with answer"
     }
   ]
 }`;
       break;
-
     default:
       throw new Error(`Unsupported question type: ${question_type}`);
   }
 
   return `You are a JSON generator bot. You must respond ONLY with a valid JSON — no explanations, no headings, no markdown, no plain text.
 
-  Generate questions of type "${question_type.replace(
-    /_/g,
-    " "
-  )}" from the content below with the following distribution:
-  - ${no_of_questions_easy} easy questions
-  - ${no_of_questions_medium} medium questions
-  - ${no_of_questions_hard} hard questions
-  
-  Respond only using this JSON format:
-  ${format}
-  
-  Content:
-  ${text}`;
-}
+Generate questions of type "${question_type.replace(/_/g, " ")}" from the content below with the following distribution:
+- ${no_of_questions_easy} easy questions
+- ${no_of_questions_medium} medium questions
+- ${no_of_questions_hard} hard questions
 
+Respond only using this JSON format:
+${format}
+
+Content:
+${text}`;
+}
 const generateQuestionsFromText = async (
   text,
   question_type,
@@ -161,6 +146,8 @@ const generateQuestionsFromText = async (
   no_of_questions_medium,
   no_of_questions_hard
 ) => {
+  console.log("Generating questions from text...");
+  
   try {
     const prompt = buildPrompt(
       text,
@@ -171,7 +158,8 @@ const generateQuestionsFromText = async (
     );
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      
+      model: "deepseek/deepseek-r1-distill-llama-8b",
       messages: [
         {
           role: "system",
@@ -182,6 +170,7 @@ const generateQuestionsFromText = async (
       ],
       temperature: 0.3,
     });
+    
 
     const content = response.choices[0].message.content;
     console.log("Generated Questions:", content);
@@ -427,10 +416,10 @@ const getAllQuestionsByUser = async (req, res) => {
     const questions = await Question.findAll({
       where: { user_id },
       include: [
-        { model: Book, as: "book" },
-        { model: Chapter, as: "chapter" },
-        { model: Topic, as: "topic" },
-        { model: User, as: "user" },
+        { model: Book, as: "Book" }, // Make sure this matches exactly with your association alias
+        { model: Chapter, as: "Chapter" }, // Should match association alias
+        { model: Topic, as: "Topic" }, // Should match association alias
+        { model: User, as: "User" }, // Should match association alias
       ],
     });
     return res
@@ -440,9 +429,10 @@ const getAllQuestionsByUser = async (req, res) => {
     console.error("Error fetching questions:", error);
     return res
       .status(500)
-      .json({ message: "Failed to fetch questions", error });
+      .json({ message: "Failed to fetch questions", error: error.message });
   }
 };
+
 //get all question by book id
 const getAllQuestionsByBookId = async (req, res) => {
   try {
