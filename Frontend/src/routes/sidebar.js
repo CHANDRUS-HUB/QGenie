@@ -2,6 +2,7 @@
 import BellIcon from '@heroicons/react/24/outline/BellIcon'
 import DocumentTextIcon from '@heroicons/react/24/outline/DocumentTextIcon'
 import Squares2X2Icon from '@heroicons/react/24/outline/Squares2X2Icon'
+import { BsFillPatchQuestionFill } from "react-icons/bs";
 import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon'
 import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
 import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquareIcon'
@@ -78,7 +79,7 @@ const routes = [
     path: '/app/generatedquestions', // url
     icon: (
       <div className="w-6 h-5 flex items-center ">
-        <RiBookShelfLine className="w-6 h-6" />
+        <BsFillPatchQuestionFill className="w-6 h-6" />
       </div>
     ), // icon component
     name: 'Generated Questions', // name that appears in Sidebar
