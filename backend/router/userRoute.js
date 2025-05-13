@@ -11,6 +11,7 @@ const {
     forgotPassword,
     resetPassword,
     getAllUsers,
+    resendOTP,
 } = require("../controllers/usersController");
 
 const protectRoute = require("../middleware/protectRoute");
@@ -22,6 +23,7 @@ const router = express.Router();
 // Auth routes
 router.post("/register", registerUser);
 router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 router.post("/login", loginUser);
 router.post("/logout", protectRoute, logoutUser);
 router.post("/forgot-password", forgotPassword);

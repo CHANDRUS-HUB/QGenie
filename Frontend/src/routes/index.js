@@ -22,6 +22,7 @@ const GettingStarted = lazy(() => import('../pages/GettingStarted'))
 const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
 const ViewUserBook = lazy(() => import('../pages/protected/ViewBook'))
+const ViewQuestionsBook=lazy(() => import('../pages/protected/ViewQuestionsBook'))
 const Generated_Questions=lazy(() => import('../pages/protected/Generated_Questons.js'))
 
 const routes = [
@@ -68,6 +69,10 @@ const routes = [
   {
     path: '/Users/view-book/:id',
     component: ViewUserBook,
+  },
+  {
+    path: '/Users/view-Questions/:id',
+    component: ViewQuestionsBook,
   },
 
   {

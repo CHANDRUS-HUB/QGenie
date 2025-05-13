@@ -17,6 +17,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { Document, Paragraph, TextRun, Packer, AlignmentType, TabStopType, BorderStyle } from 'docx';
 import { saveAs } from "file-saver";
+import { useParams } from "react-router-dom";
 
 const Generated_Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -31,12 +32,13 @@ const Generated_Questions = () => {
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState(null);
-
+const params = useParams();
+  const userId = params.id;
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.get(
-          `${baseUrl}/get-all-questions-by-currentuser`,
+          `${baseUrl}/get-question-by-userid/${userId}`,
           { withCredentials: true }
         );
         setQuestions(
@@ -612,6 +614,28 @@ yPosition += questionLines.length * 6;  // Adjust spacing based on line count
   return (
     <div className="p-6 dark:bg-gray-900 dark:text-gray-100 min-h-screen">
       <Toaster />
+       {/* Back Button */}
+       <div className="absolute top-20 left-1" onClick={() => window.history.back()}>
+        <button
+          
+          className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full p-2 shadow-md hover:shadow-lg transition duration-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 12H3m0 0l9 9m-9-9l9-9"
+            />
+          </svg>
+        </button>
+      </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
@@ -679,254 +703,228 @@ yPosition += questionLines.length * 6;  // Adjust spacing based on line count
 
         {/* Add Book filter */}
         <select
-          value={bookFilter}
-          onChange={(e) => setBookFilter(e.target.value)}
-          className="p-2 border outline-none rounded flex-1 min-w-[150px] dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+            value={bookFilter}
+            onChange={(e) => setBookFilter(e.target.value)}
+            className="p-2 border outline-none rounded flex-1 min-w-[150px] dark:bg-gray-800 dark:border-gray-700 dark:text-white"
         >
-          <option value="">All Books</option>
-          {Array.from(new Set(questions.map(q => q.Book?.title).filter(Boolean))).map(title => (
-            <option key={title} value={title}>{title}</option>
-          ))}
+            <option value="">All Books</option>
+            {Array.from(new Set(questions.map(q => q.Book?.title).filter(Boolean))).map(title => (
+                <option key={title} value={title}>{title}</option>
+            ))}
         </select>
-      </div>
+        </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow dark:bg-gray-800 dark:border dark:border-gray-700">
-      {questions.length === 0 ? (
-            <div className="text-center text-gray-500 mb-2 dark:text-gray-300 mt-10">
+        {questions.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-300 mt-10">
                 <p>No questions available.</p>
             </div>
         ) : (
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-lime-600  dark:bg-gray-700">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider dark:text-gray-300"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    <div className="flex items-center">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: " 🔼",
-                        desc: " 🔽",
-                      }[header.column.getIsSorted()] ?? null}
-                    </div>
-                  </th>
-                ))}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider dark:text-gray-300">
-                  Toggle
-                </th>
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-            {table.getRowModel().rows.map((row) => (
-              <React.Fragment key={row.id}>
-                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 whitespace-nowrap dark:text-gray-300"
-                    >
-                      {editingId === row.original.question_id &&
-                        (cell.column.id === "all_questions" ||
-                          cell.column.id === "difficulty_level" ||
-                          cell.column.id === "question_type") ? (
-                        cell.column.id === "difficulty_level" ? (
-                          <select
-                            name="difficulty_level"
-                            value={editForm.difficulty_level || ""}
-                            onChange={handleEditChange}
-                            className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                          >
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                          </select>
-                        ) : cell.column.id === "question_type" ? (
-                          <select
-                            name="question_type"
-                            value={editForm.question_type || ""}
-                            onChange={handleEditChange}
-                            className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                          >
-                            <option value="multiple_choice">
-                              Multiple Choice
-                            </option>
-                            <option value="fill_in_the_blanks">
-                              Fill in the Blanks
-                            </option>
-                            <option value="true_or_false">True/False</option>
-                            <option value="short_answer">Short Answer</option>
-                            <option value="long_answer">Long Answer</option>
-                          </select>
-                        ) : (
-                          <input
-                            name={cell.column.id}
-                            value={editForm[cell.column.id] || ""}
-                            onChange={handleEditChange}
-                            className="p-1 border outline-lime-500 rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                          />
-                        )
-                      ) : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </td>
-                  ))}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleRowExpansion(row.id)}
-                      className="text-blue-500 hover:text-blue-700 outline-none dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      {expandedRows[row.id] ? "▲" : "▼"}
-                    </button>
-                  </td>
-                </tr>
-                {expandedRows[row.id] && (
-                  <tr>
-                    <td
-                      colSpan={columns.length + 1}
-                      className="px-6 py-4 bg-gray-50 dark:bg-gray-700"
-                    >
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-medium dark:text-gray-300">
-                            Answer:
-                          </h3>
-                          {editingId === row.original.question_id ? (
-                            <input
-                              name="answer"
-                              value={editForm.answer || ""}
-                              onChange={handleEditChange}
-                              className="p-1 border rounded w-full mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                            />
-                          ) : (
-                            <p className="dark:text-gray-300">
-                              {row.original.answer}
-                            </p>
-                          )}
-                        </div>
+            <div className="overflow-x-auto bg-white rounded-lg shadow dark:bg-gray-800 dark:border dark:border-gray-700">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-lime-600  dark:bg-gray-700">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <tr key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => (
+                                    <th
+                                        key={header.id}
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider dark:text-gray-300"
+                                        onClick={header.column.getToggleSortingHandler()}
+                                    >
+                                        <div className="flex items-center">
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                            {{
+                                                asc: " 🔼",
+                                                desc: " 🔽",
+                                            }[header.column.getIsSorted()] ?? null}
+                                        </div>
+                                    </th>
+                                ))}
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-100 uppercase tracking-wider dark:text-gray-300">
+                                    Toggle
+                                </th>
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                        {table.getRowModel().rows.map((row) => (
+                            <React.Fragment key={row.id}>
+                                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    {row.getVisibleCells().map((cell) => (
+                                        <td
+                                            key={cell.id}
+                                            className="px-6 py-4 whitespace-nowrap dark:text-gray-300"
+                                        >
+                                            {editingId === row.original.question_id &&
+                                                (cell.column.id === "all_questions" ||
+                                                    cell.column.id === "difficulty_level" ||
+                                                    cell.column.id === "question_type") ? (
+                                                cell.column.id === "difficulty_level" ? (
+                                                    <select
+                                                        name="difficulty_level"
+                                                        value={editForm.difficulty_level || ""}
+                                                        onChange={handleEditChange}
+                                                        className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                                    >
+                                                        <option value="easy">Easy</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="hard">Hard</option>
+                                                    </select>
+                                                ) : cell.column.id === "question_type" ? (
+                                                    <select
+                                                        name="question_type"
+                                                        value={editForm.question_type || ""}
+                                                        onChange={handleEditChange}
+                                                        className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                                    >
+                                                        <option value="multiple_choice">
+                                                            Multiple Choice
+                                                        </option>
+                                                        <option value="fill_in_the_blanks">
+                                                            Fill in the Blanks
+                                                        </option>
+                                                        <option value="true_or_false">True/False</option>
+                                                        <option value="short_answer">Short Answer</option>
+                                                        <option value="long_answer">Long Answer</option>
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        name={cell.column.id}
+                                                        value={editForm[cell.column.id] || ""}
+                                                        onChange={handleEditChange}
+                                                        className="p-1 border outline-lime-500 rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                                    />
+                                                )
+                                            ) : (
+                                                flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )
+                                            )}
+                                        </td>
+                                    ))}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                            onClick={() => toggleRowExpansion(row.id)}
+                                            className="text-blue-500 hover:text-blue-700 outline-none dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
+                                            {expandedRows[row.id] ? "▲" : "▼"}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {expandedRows[row.id] && (
+                                    <tr>
+                                        <td
+                                            colSpan={columns.length + 1}
+                                            className="px-6 py-4 bg-gray-50 dark:bg-gray-700"
+                                        >
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <h3 className="font-medium dark:text-gray-300">
+                                                        Answer:
+                                                    </h3>
+                                                    {editingId === row.original.question_id ? (
+                                                        <input
+                                                            name="answer"
+                                                            value={editForm.answer || ""}
+                                                            onChange={handleEditChange}
+                                                            className="p-1 border rounded w-full mt-1 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                                        />
+                                                    ) : (
+                                                        <p className="dark:text-gray-300">
+                                                            {row.original.answer}
+                                                        </p>
+                                                    )}
+                                                </div>
 
-                        {row.original.question_type === "multiple_choice" &&
-                          row.original.options && (
-                            <div>
-                              <h3 className="font-medium dark:text-gray-300">
-                                Options:
-                              </h3>
-                              {editingId === row.original.question_id ? (
-                                <div className="space-y-2 mt-1">
-                                  {editForm.options.map((option, index) => (
-                                    <input
-                                      key={index}
-                                      value={option}
-                                      onChange={(e) =>
-                                        handleOptionChange(
-                                          index,
-                                          e.target.value
-                                        )
-                                      }
-                                      className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                                    />
-                                  ))}
-                                </div>
-                              ) : (
-                                <ul className="list-disc pl-5 dark:text-gray-300">
-                                  {row.original.options.map((option, index) => (
-                                    <li key={index}>{option}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          )}
+                                                {row.original.question_type === "multiple_choice" &&
+                                                    row.original.options && (
+                                                        <div>
+                                                            <h3 className="font-medium dark:text-gray-300">
+                                                                Options:
+                                                            </h3>
+                                                            {editingId === row.original.question_id ? (
+                                                                <div className="space-y-2 mt-1">
+                                                                    {editForm.options.map((option, index) => (
+                                                                        <input
+                                                                            key={index}
+                                                                            value={option}
+                                                                            onChange={(e) =>
+                                                                                handleOptionChange(
+                                                                                    index,
+                                                                                    e.target.value
+                                                                                )
+                                                                            }
+                                                                            className="p-1 border rounded w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <ul className="list-disc pl-5 dark:text-gray-300">
+                                                                    {row.original.options.map((option, index) => (
+                                                                        <li key={index}>{option}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            )}
+                                                        </div>
+                                                    )}
 
-                        {/* <div className="flex items-center">
-                          <h3 className="font-medium mr-2 dark:text-gray-300">Public:</h3>
-                          {editingId === row.original.question_id ? (
-                            <input
-      [rowId]: !prev[rowId],
-    }));
-  };
+                                                <div className="p-4 rounded-xl shadow-md bg-gradient-to-br from-lime-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 transition-colors">
+                                                    <h3 className="text-xl font-bold text-lime-800 dark:text-lime-300 mb-3 flex items-center gap-2">
+                                                        📘 Book Details
+                                                    </h3>
+                                                    <div className="space-y-2 text-sm text-gray-800 dark:text-gray-200">
+                                                        <p>
+                                                            <span className="font-semibold text-lime-700 dark:text-lime-400">Subject:</span>{" "}
+                                                            {row.original.Book?.subject || "N/A"}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-semibold text-lime-700 dark:text-lime-400">Chapter Name:</span>{" "}
+                                                            {(() => {
+                                                                const chapter = row.original.Book?.metadata?.chapters?.find(
+                                                                    chap => row.original.chapter_id &&
+                                                                        row.original.Book.metadata.chapters.indexOf(chap) + 1 === row.original.chapter_id
+                                                                );
+                                                                return chapter?.chapterName || "N/A";
+                                                            })()}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-semibold text-lime-700 dark:text-lime-400">Topic Name:</span>{" "}
+                                                            {(() => {
+                                                                const chapter = row.original.Book?.metadata?.chapters?.find(
+                                                                    chap => row.original.chapter_id &&
+                                                                        row.original.Book.metadata.chapters.indexOf(chap) + 1 === row.original.chapter_id
+                                                                );
 
-  const handleEdit = (question) => {
-    setEditingId(question.question_id);
-    setEditForm({
-      all_questions: question.all_questions,
-      difficulty_level: question.difficulty_level,
-      question_type: question.question_type,| false}
-                              onChange={handleEditChange}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-600"
-                            />
-                          ) : (
-                            <span className="dark:text-gray-300">{row.original.question_ispublic ? 'Yes' : 'No'}</span>
-                          )}
-                        </div> */}
+                                                                if (chapter && row.original.topic_id && chapter.topics) {
+                                                                    return chapter.topics[row.original.topic_id - 1] || "N/A";
+                                                                }
+                                                                return "N/A";
+                                                            })()}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-semibold text-lime-700 dark:text-lime-400">Class:</span>{" "}
+                                                            {row.original.Book?.class_name || "N/A"}
+                                                        </p>
+                                                        <p>
+                                                            <span className="font-semibold text-lime-700 dark:text-lime-400">Medium:</span>{" "}
+                                                            {row.original.Book?.medium || "N/A"}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                        <div className="p-4 rounded-xl shadow-md bg-gradient-to-br from-lime-100 to-purple-100 dark:from-gray-800 dark:to-gray-700 transition-colors">
-                          <h3 className="text-xl font-bold text-lime-800 dark:text-lime-300 mb-3 flex items-center gap-2">
-                            📘 Book Details
-                          </h3>
-                          <div className="space-y-2 text-sm text-gray-800 dark:text-gray-200">
-                            <p>
-                              <span className="font-semibold text-lime-700 dark:text-lime-400">Subject:</span>{" "}
-                              {row.original.Book?.subject || "N/A"}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-lime-700 dark:text-lime-400">Chapter Name:</span>{" "}
-                              {(() => {
-                                // Find the chapter in Book.metadata.chapters that matches chapter_id
-                                const chapter = row.original.Book?.metadata?.chapters?.find(
-                                  chap => row.original.chapter_id &&
-                                    row.original.Book.metadata.chapters.indexOf(chap) + 1 === row.original.chapter_id
-                                );
-                                return chapter?.chapterName || "N/A";
-                              })()}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-lime-700 dark:text-lime-400">Topic Name:</span>{" "}
-                              {(() => {
-                                // Find the chapter first
-                                const chapter = row.original.Book?.metadata?.chapters?.find(
-                                  chap => row.original.chapter_id &&
-                                    row.original.Book.metadata.chapters.indexOf(chap) + 1 === row.original.chapter_id
-                                );
-
-                                // Then find the topic within that chapter
-                                if (chapter && row.original.topic_id && chapter.topics) {
-                                  return chapter.topics[row.original.topic_id - 1] || "N/A";
-                                }
-                                return "N/A";
-                              })()}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-lime-700 dark:text-lime-400">Class:</span>{" "}
-                              {row.original.Book?.class_name || "N/A"}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-lime-700 dark:text-lime-400">Medium:</span>{" "}
-                              {row.original.Book?.medium || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>)}
-      </div>
-
-      {/* Enhanced Pagination */}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )}
       <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700 dark:text-gray-300">

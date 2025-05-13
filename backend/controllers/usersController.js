@@ -44,7 +44,7 @@ const sendOTPEmail = (email, otp) => {
                 <h2 style="color: #4CAF50;">Welcome to QGenie!</h2>
                 <p>Thank you for signing up. Please use the following OTP to verify your account:</p>
                 <h3 style="color: #4CAF50;">${otp}</h3>
-                <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+                <p>This OTP is valid for <strong>5 minutes</strong>.</p>
                 <p>If you did not request this, please ignore this email.</p>
                 <br>
                 <p>Best regards,</p>
@@ -84,7 +84,30 @@ const generateOTP = () => {
 // Store OTP temporarily
 const otpStore = {};
 
-
+//resend otp for signup
+const resendOTP = async (req, res) => {
+    const { email } = req.body;
+    const errors = [];
+    if (!email) {
+        errors.push("Email is required.");
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+        errors.push("Invalid email format.");
+    }
+    if (errors.length > 0) {
+        return res.status(400).json({ errors });
+    }
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) return res.status(404).json({ message: "Email not found." });
+        const otp = generateOTP();
+        otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 }; // 5 minutes expiration
+        await sendOTPEmail(email, otp);
+        res.status(200).json({ message: "OTP resent to your email." });
+    }
+    catch (err) {
+        res.status(500).json({ message: "Error sending OTP", error: err.message });
+    }
+};
 
 // Forgot Password (Send OTP)
 const forgotPassword = async (req, res) => {
@@ -193,16 +216,16 @@ const loginUser = async (req, res) => {
 // Register a new user
 const registerUser = async (req, res) => {
     const { username, email, password,  role } = req.body;
-    const phoneNumber = "123456789012";
+    // const phoneNumber = "123456789012";
 
     if (!username) return res.status(400).json({ message: "Username is required" });
     if (!email) return res.status(400).json({ message: "Email is required" });
     if (!password) return res.status(400).json({ message: "Password is required" });
-    if (!phoneNumber) return res.status(400).json({ message: "Phone Number is required" });
+    // if (!phoneNumber) return res.status(400).json({ message: "Phone Number is required" });
     if (!role) return res.status(400).json({ message: "Role is required" });
 
     // Validate user input
-    const errors = validateUserInput(username, email, password, phoneNumber, role);
+    const errors = validateUserInput(username, email, password, role);
     if (errors.length > 0) {
         return res.status(400).json({ message: "Validation failed", errors });
     }
@@ -212,7 +235,7 @@ const registerUser = async (req, res) => {
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
         const otp = generateOTP();
-        otpStore[email] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };// 10 minutes expiration
+        otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };// 5 minutes expiration
         await sendOTPEmail(email, otp);
 
         res.status(200).json({ message: "OTP sent to email for verification." });
@@ -225,19 +248,19 @@ const registerUser = async (req, res) => {
 // Verify OTP and save user
 const verifyOTP = async (req, res) => {
     const { username, email, password,  role } = req.body;
-    const phoneNumber = "123456789012";
-    // const { otp } = req.body;
+    // const phoneNumber = "123456789012";
+    const { otp } = req.body;
 
-    // const storedOtp = otpStore[email];
-    // if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
-    //     return res.status(400).json({ message: "Invalid or expired OTP." });
-    // }
+    const storedOtp = otpStore[email];
+    if (!storedOtp || storedOtp.otp !== otp || Date.now() > storedOtp.expiresAt) {
+        return res.status(400).json({ message: "Invalid or expired OTP." });
+    }
 
     try {
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ username, email, password: hashedPassword, phoneNumber, role });
+        await User.create({ username, email, password: hashedPassword, role });
         delete otpStore[email];
         res.status(201).json({ message: "User registered successfully." });
     } catch (error) {
@@ -346,4 +369,5 @@ module.exports = {
     forgotPassword,
     resetPassword,
     getAllUsers,
+    resendOTP,
 };

@@ -21,8 +21,8 @@ function ForgotPassword() {
     const [errorMessage, setErrorMessage] = useState("")
     const [otpSent, setOtpSent] = useState(false)
     const [userObj, setUserObj] = useState(INITIAL_USER_OBJ)
-    const [timer, setTimer] = useState(10) // 10 minutes in seconds
-    const [canResend, setCanResend] = useState(false) 
+    const [timer, setTimer] = useState(120) 
+        const [canResend, setCanResend] = useState(false) 
     // const dispatch = useDispatch()
 
 
@@ -42,10 +42,10 @@ function ForgotPassword() {
 }, [otpSent, timer])
 
 const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-}
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+};
 
 
 
@@ -57,9 +57,23 @@ const formatTime = (seconds) => {
         // Basic validation
         if (userObj.emailId.trim() === "") return setErrorMessage("Email Id is required!");
         if (userObj.otp.trim() === "") return setErrorMessage("OTP is required!");
-        if (userObj.newPassword.trim() === "") return setErrorMessage("New Password is required!");
-        if (userObj.newPassword.length < 6 || !/\d/.test(userObj.newPassword)) {
-            return setErrorMessage("Password must be at least 6 characters long and contain at least one number.");
+       
+        if (userObj.newPassword.trim() === "") return setErrorMessage("Password is required!");
+        // newPassword must be atleast 6 characters long
+        else if (userObj.newPassword.length < 8) {
+            return setErrorMessage("Password must be at least 8 characters long");
+        }
+        else if (!/[A-Z]/.test(userObj.newPassword)) {
+            return setErrorMessage("Password must contain at least one uppercase letter");
+        }
+        else if (!/[a-z]/.test(userObj.newPassword)) {
+            return setErrorMessage("Password must contain at least one lowercase letter");
+        }
+        else if (!/[0-9]/.test(userObj.newPassword)) {
+            return setErrorMessage("Password must contain at least one number");
+        }
+        else if (!/[!@#$%^&*(),.?":{}|<>]/.test(userObj.newPassword)) {
+            return setErrorMessage("Password must contain at least one special character");
         }
 
         setLoading(true);
@@ -113,7 +127,7 @@ const formatTime = (seconds) => {
 
             if (response.status === 200) {
                 setOtpSent(true);
-                setTimer(10); // Reset timer to 10 minutes
+                setTimer(120); // Reset timer to 2 minutes
                 setCanResend(false);
                 toast.success(response.data.message)
             } else {

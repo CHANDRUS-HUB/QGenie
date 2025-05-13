@@ -18,7 +18,9 @@ function PageContent({ userRole }){
         // Hide /users for Teachers
         if (route.path === "/Users" && userRole === "Teacher") return false;
         // Hide /Upload-Books for Teachers
-        if (route.path === "/Users/view-book" && userRole === "Teacher") return false;
+        if (route.path === "/Users/view-book/:id" && userRole === "Teacher") return false;
+
+        if (route.path === "/Users/view-Questions/:id" && userRole === "Teacher") return false;
         // Hide /userBooks for Admin
         return true;
     });

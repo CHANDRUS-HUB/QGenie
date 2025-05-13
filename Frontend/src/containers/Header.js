@@ -113,7 +113,7 @@ function Header() {
           <div className="dropdown dropdown-end ml-4">
             <div className="flex items-center gap-2">
               {username.role === "Admin" && (
-                <span className="text-sm font-semibold text-gray-600">Admin</span>
+                <span className="text-sm font-semibold dark:text-gray-100">Admin</span>
               )}
 
               <label tabIndex={0} className="btn btn-ghost btn-circle avatar">

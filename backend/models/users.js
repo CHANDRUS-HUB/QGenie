@@ -7,7 +7,7 @@ const User = sequelize.define('User', {
   username: { type: DataTypes.STRING, allowNull: false },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   password: { type: DataTypes.TEXT, allowNull: false },
-  phoneNumber: { type: DataTypes.STRING(12) },
+  // phoneNumber: { type: DataTypes.STRING(12) },
   role: {
     type: DataTypes.STRING(20),
     validate: { isIn: [['Admin', 'Teacher']] },

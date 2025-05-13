@@ -410,6 +410,7 @@ const getMultipleQuestionsById = async (req, res) => {
 };
 
 //get all question by current user
+//get all question by current user
 const getAllQuestionsByUser = async (req, res) => {
   try {
     const user_id = req.user.id;
@@ -432,7 +433,6 @@ const getAllQuestionsByUser = async (req, res) => {
       .json({ message: "Failed to fetch questions", error: error.message });
   }
 };
-
 //get all question by book id
 const getAllQuestionsByBookId = async (req, res) => {
   try {
@@ -555,7 +555,28 @@ const deleteQuestionById = async (req, res) => {
       .json({ message: "Failed to delete question", error });
   }
 };
-
+const getAllQuestionsByUserId = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const questions = await Question.findAll({
+      where: { user_id },
+      include: [
+        { model: Book, as: "Book" }, // Make sure this matches exactly with your association alias
+        { model: Chapter, as: "Chapter" }, // Should match association alias
+        { model: Topic, as: "Topic" }, // Should match association alias
+        { model: User, as: "User" }, // Should match association alias
+      ],
+    });
+    return res
+      .status(200)
+      .json({ message: "Questions fetched successfully", data: questions });
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch questions", error: error.message });
+  }
+};
 module.exports = {
   createQuestion,
   getAllQuestions,
@@ -568,4 +589,5 @@ module.exports = {
   updateQuestionById,
   deleteQuestionById,
   getMultipleQuestionsById,
+  getAllQuestionsByUserId,
 };
