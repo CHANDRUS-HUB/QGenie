@@ -3,6 +3,140 @@ import axios from "axios";
 import baseUrl from "../../utils/URL";
 import { toast, Toaster } from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useRef } from "react";
+
+const CustomSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  className = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value || "");
+  const [filteredOptions, setFilteredOptions] = useState(options);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    setInputValue(value || "");
+  }, [value]);
+
+  useEffect(() => {
+    if (inputValue) {
+      setFilteredOptions(
+        options.filter((option) =>
+          option.toString().toLowerCase().includes(inputValue.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredOptions(options);
+    }
+  }, [inputValue, options]);
+
+  const handleSelect = (selectedValue) => {
+    setInputValue(selectedValue);
+    onChange(selectedValue);
+    setIsOpen(false);
+  };
+
+ const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(newValue);
+    
+    // Filter options based on input
+    if (newValue) {
+      setFilteredOptions(
+        options.filter(option =>
+          option.toString().toLowerCase().includes(newValue.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredOptions(options);
+    }
+    
+    if (!isOpen) setIsOpen(true);
+  };
+  const handleInputClick = () => {
+  setIsOpen(true); // Always open dropdown when clicked
+  setFilteredOptions(options); // Show all options initially
+};
+
+  return (
+   <div className={`form-control relative ${className}`} ref={wrapperRef}>
+      <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onClick={handleInputClick}  // Changed to use handleInputClick
+          className="input input-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg pr-10"
+          placeholder={placeholder}
+        />
+        <div
+          className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+          onClick={handleInputClick}  // Changed to use handleInputClick
+        >
+          <svg
+            className="h-5 w-5 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={isOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
+            />
+          </svg>
+        </div>
+
+        {isOpen && (
+          <div className="absolute z-10 mt-1 w-full max-h-60 overflow-auto rounded-md bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <div
+                  key={option}
+                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    option === value ? "bg-gray-100 dark:bg-gray-700" : ""
+                  }`}
+                  onClick={() => {
+                    setInputValue(option);
+                    onChange(option);
+                    setIsOpen(false);
+                  }}
+                >
+                  {option}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                No options available
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 function Integration() {
   const [integrationList, setIntegrationList] = useState([]);
@@ -27,9 +161,10 @@ function Integration() {
     "Computer Science",
     "type a subject",
   ];
+
   const classOptions = [
-    ...Array.from({ length: 12 }, (_, i) => i + 1),
-    "type a class",
+    ...Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`), // Now returns "Class 1", "Class 2" etc.
+    
   ];
 
   useEffect(() => {
@@ -212,7 +347,7 @@ function Integration() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="col-span-1 ">
+            <div className="col-span-1  ">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Total Books: {integrationList.length}
               </h2>
@@ -227,7 +362,7 @@ function Integration() {
                   className="backdrop-blur-md bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-6 flex flex-col justify-between"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <h2 className="sm470:text-xl text-md sm470:font-medium font-bold text-gray-900 dark:text-white">
                       {integration.name}
                     </h2>
                     <div
@@ -414,51 +549,34 @@ function Integration() {
                 placeholder="Enter book title"
               />
             </div>
-            <div className="form-control relative">
-              <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Subject
-              </label>
-              <input
-                list="subject-list"
-                value={currentEditData?.subject || ""}
-                onChange={(e) =>
-                  setCurrentEditData({
-                    ...currentEditData,
-                    subject: e.target.value,
-                  })
-                }
-                className="input input-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
-                placeholder="Select or type a subject"
-              />
-              <datalist id="subject-list">
-                {subjectOptions.map((subject) => (
-                  <option key={subject} value={subject} />
-                ))}
-              </datalist>
-            </div>
+            {/* Subject Select */}
+<CustomSelect
+  label="Subject"
+  value={currentEditData?.subject || ""}
+  onChange={(value) =>
+    setCurrentEditData({
+      ...currentEditData,
+      subject: value,
+    })
+  }
+  options={subjectOptions}
+  placeholder="Select or type a subject"
+/>
 
-            <div className="form-control md:col-span-2 relative">
-              <label className="label font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Class
-              </label>
-              <input
-                list="class-list"
-                value={currentEditData?.className || ""}
-                onChange={(e) =>
-                  setCurrentEditData({
-                    ...currentEditData,
-                    className: e.target.value,
-                  })
-                }
-                className="input input-bordered w-full bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary focus:border-primary rounded-lg"
-                placeholder="Select or type a class"
-              />
-              <datalist id="class-list">
-                {classOptions.map((classItem) => (
-                  <option key={classItem} value={classItem} />
-                ))}
-              </datalist>
-            </div>
+{/* Class Select */}
+<CustomSelect
+  label="Class"
+  value={currentEditData?.className || ""}
+  onChange={(value) =>
+    setCurrentEditData({
+      ...currentEditData,
+      className: value,
+    })
+  }
+  options={classOptions}
+  placeholder="Select or type a class"
+  className="md:col-span-2"
+/>
           </div>
           <div className="mt-10 border-t pt-6 flex items-center justify-between">
             <div className="text-left">

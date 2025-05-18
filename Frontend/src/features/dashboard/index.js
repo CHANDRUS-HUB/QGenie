@@ -127,8 +127,9 @@ function Dashboard() {
 
             {/* More Stats */}
             <div className="grid lg:grid-cols-2 mt-10 grid-cols-1 gap-6">
-                <AmountStats />
+                
                 <PageStats />
+                <AmountStats />
             </div>
 
             {/* User Channels and Doughnut */}

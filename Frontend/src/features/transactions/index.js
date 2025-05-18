@@ -129,6 +129,7 @@ function Transactions() {
         role: u.role, // Changed from 'location' to 'role' for clarity
         amount: Math.floor(Math.random() * 500) + 100,
         books: u.Books || [], // Ensure books is always an array
+        questions: u.questions || {}, // Ensure questions is always an object
         date: u.created_at,
         avatar: u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username)}&background=random`,
       }));
@@ -217,6 +218,7 @@ function Transactions() {
                 <th>Role</th>
                 <th>Registered At</th>
                 <th>Uploaded Books</th>
+                <th>Generated Questions</th>
                 <th>View Books</th>
                 <th>View Questions</th>
               </tr>
@@ -240,18 +242,46 @@ function Transactions() {
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   <td>{moment(user.date).format("DD MMM YYYY hh:mm A")}</td>
-                  <td>
-                    <span
-                      className="badge badge-ghost badge-sm cursor-help"
-                      title={
-                        user.books?.length > 0
-                          ? user.books.map((book) => book.title).join(", ")
-                          : "No books"
-                      }
-                    >
-                      {user.books?.length || 0} Books
-                    </span>
-                  </td>
+                 <td>
+  <span
+    className={`badge badge-sm cursor-help whitespace-nowrap ${
+      user.books?.length > 0
+        ? "" // Color when books exist
+        : "bg-red-300 dark:text-black"    // Color when no books
+    }`}
+    title={
+      user.books?.length > 0
+        ? user.books.map((book) => book.title).join("\n")
+        : "No books uploaded"
+    }
+  >
+    {user.books?.length > 0 ? (
+      `${user.books.length} Book${user.books.length !== 1 ? 's' : ''}`
+    ) : (
+      "No uploads"
+    )}
+  </span>
+</td>
+<td>
+  <span
+    className={`badge badge-sm cursor-help whitespace-nowrap ${
+      user.questions?.length > 0
+        ? "" // Color when questions exist
+        : "bg-red-300 dark:text-black"    // Color when no questions
+    }`}
+    title={
+      user.questions?.length > 0
+        ? `${user.questions.length} question${user.questions.length !== 1 ? 's' : ''} generated`
+        : "No questions generated"
+    }
+  >
+    {user.questions?.length > 0 ? (
+      `${user.questions.length} Question${user.questions.length !== 1 ? 's' : ''}`
+    ) : (
+      "No Questions"
+    )}
+  </span>
+</td>
                   <td>
                     <motion.button
                       whileHover={{ scale: 1.1 }}

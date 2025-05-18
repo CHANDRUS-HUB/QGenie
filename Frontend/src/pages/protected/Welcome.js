@@ -42,7 +42,7 @@ function InternalPage() {
   }, [dispatch])
 
   return (
-    <div className="h-screen bg-gradient-to-t from-green-900 via-emerald-600 to-teal-500 text-white flex items-center justify-center px-4 rounded-lg dark:shadow-lg dark:shadow-green-500">
+    <div className="sm470:h-screen h-[620px]  bg-gradient-to-t from-green-900 via-emerald-600 to-teal-500 text-white flex items-center justify-center px-4 rounded-lg dark:shadow-lg dark:shadow-green-500">
 
       <motion.div
         className="text-center w-full max-w-3xl"
@@ -51,7 +51,7 @@ function InternalPage() {
         transition={{ duration: 1 }}
       >
         <motion.h1
-          className="text-6xl font-extrabold leading-tight  drop-shadow-lg"
+          className="sm470:text-6xl text-3xl font-extrabold leading-tight  drop-shadow-lg"
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6 }}
@@ -59,7 +59,7 @@ function InternalPage() {
           Welcome to <span className="text-yellow-300">QGenie</span>
         </motion.h1>
         <motion.p
-          className="text-xl sm:text-2xl font-light  tracking-wide"
+          className="text-lg sm:text-2xl font-light  tracking-wide"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 1 }}

@@ -8,7 +8,7 @@ function TemplatePointers() {
             transition={{ duration: 0.8 }}
         >
             <motion.h1
-                className="text-2xl mt-5 font-bold text-center"
+                className="sm470:text-2xl text-xl mt-5 font-bold text-center"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.6 }}

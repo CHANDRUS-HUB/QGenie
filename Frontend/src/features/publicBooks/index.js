@@ -128,7 +128,7 @@ function PublicBooks() {
                 placeholder="Enter title, subject, class, or medium..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="w-full mb-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-lime-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 transition duration-150"
+                className="w-full  px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-lime-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 transition duration-150"
               />
             </div>
             <div>
@@ -142,13 +142,20 @@ function PublicBooks() {
                 id="sort"
                 value={sortOption}
                 onChange={handleSort}
-                className="w-full px-4 mb-2 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-lime-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 transition duration-150"
-              >
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-lime-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 transition duration-150"
+                >
                 <option value="name">Name</option>
                 <option value="subject">Subject</option>
                 <option value="className">Class</option>
               </select>
             </div>
+             </motion.div>
+          <motion.div
+            className=""
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <div className="col-span-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Total Books: {publicbooksList.length}
@@ -174,7 +181,7 @@ function PublicBooks() {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4 border-b-2 border-gray-200 dark:border-gray-800 pb-1">
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="sm470:text-xl text-md sm470:font-medium font-bold  text-gray-900 dark:text-white">
                     {book.name}
                   </h2>
                   <span
@@ -199,7 +206,7 @@ function PublicBooks() {
                   {/* Details */}
                   <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
                     <li>
-                      <span className="font-medium">User Name:</span>{" "}
+                      <span className="font-medium ">User Name:</span>{" "}
                       {book.User_name || "N/A"}
                     </li>
                     <li>

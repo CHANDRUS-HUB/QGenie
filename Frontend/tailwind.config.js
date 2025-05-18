@@ -6,11 +6,14 @@ module.exports = {
   ],
   darkMode: ["class", '[data-theme="dark"]'],
   theme: {
-    extend: { },
+    extend: { screens: {
+      sm470: "470px",
+    
+    }, },
+   
   },
   plugins: [require("@tailwindcss/typography"), require("daisyui")],
   daisyui: {
     themes: ["light", "dark"],
   },
-
 }

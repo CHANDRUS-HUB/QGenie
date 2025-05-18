@@ -68,8 +68,12 @@ const Generated_Questions = () => {
     }));
   };
 
+ const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+
+  // Modify the handleEdit function to open modal
   const handleEdit = (question) => {
-    setEditingId(question.question_id);
+    setCurrentQuestion(question);
     setEditForm({
       all_questions: question.all_questions,
       difficulty_level: question.difficulty_level,
@@ -78,7 +82,35 @@ const Generated_Questions = () => {
       options: question.options ? [...question.options] : [],
       question_ispublic: question.question_ispublic,
     });
+    setIsEditModalOpen(true);
   };
+
+  // Modify the handleSave function
+  const handleSave = async () => {
+    if (!currentQuestion) return;
+    
+    try {
+      const updatedData = { ...editForm, id: currentQuestion.question_id };
+
+      await axios.put(
+        `${baseUrl}/update-question-by-currentuser`,
+        updatedData,
+        { withCredentials: true }
+      );
+
+      setQuestions(
+        questions.map((q) =>
+          q.question_id === currentQuestion.question_id ? { ...q, ...editForm } : q
+        )
+      );
+      setIsEditModalOpen(false);
+      toast.success("Question updated successfully");
+    } catch (error) {
+      console.error("Error updating question:", error);
+      toast.error("Failed to update question");
+    }
+  };
+
 
   const handleDelete = async (questionId) => {
     try {
@@ -120,30 +152,30 @@ const Generated_Questions = () => {
     }));
   };
 
-  const handleSave = async (questionId) => {
-    try {
-      const updatedData = { ...editForm, id: questionId }; // ✅ Include question_id
+  // const handleSave = async (questionId) => {
+  //   try {
+  //     const updatedData = { ...editForm, id: questionId }; // ✅ Include question_id
 
-      await axios.put(
-        `${baseUrl}/update-question-by-currentuser`,
-        updatedData,
-        {
-          withCredentials: true,
-        }
-      );
+  //     await axios.put(
+  //       `${baseUrl}/update-question-by-currentuser`,
+  //       updatedData,
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
 
-      setQuestions(
-        questions.map((q) =>
-          q.question_id === questionId ? { ...q, ...editForm } : q
-        )
-      );
-      setEditingId(null);
-      toast.success("Question updated successfully");
-    } catch (error) {
-      console.error("Error updating question:", error);
-      toast.error("Failed to update question");
-    }
-  };
+  //     setQuestions(
+  //       questions.map((q) =>
+  //         q.question_id === questionId ? { ...q, ...editForm } : q
+  //       )
+  //     );
+  //     setEditingId(null);
+  //     toast.success("Question updated successfully");
+  //   } catch (error) {
+  //     console.error("Error updating question:", error);
+  //     toast.error("Failed to update question");
+  //   }
+  // };
 
 
 
@@ -565,7 +597,7 @@ yPosition += questionLines.length * 6;  // Adjust spacing based on line count
               <>
                 <button
                   onClick={() => handleEdit(row.original)}
-                  className="px-2 py-1 text-blue-500  rounded hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-700"
+                  className="px-2 py-1 text-blue-500  rounded hover:text-lime-600 dark:text-BLUE-400 dark:hover:text-blue-700"
                 >
                   <FiEdit size={16} className="mr-1" />
                 </button>
@@ -1086,6 +1118,156 @@ yPosition += questionLines.length * 6;  // Adjust spacing based on line count
           </select>
         </div>
       </div>
+    {/* Edit Question Modal */}
+<input
+  type="checkbox"
+  id="edit-modal"
+  className="peer/modal hidden"
+  checked={isEditModalOpen}
+  onChange={() => setIsEditModalOpen(!isEditModalOpen)}
+/>
+
+<div className="fixed inset-0 z-50 overflow-y-auto hidden peer-checked/modal:block">
+  <div className="flex min-h-screen items-center justify-center p-4">
+    {/* Backdrop */}
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+      onClick={() => setIsEditModalOpen(false)}
+    />
+    
+    {/* Modal container */}
+    <div className="relative w-full max-w-4xl rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all transform overflow-hidden border border-gray-200 dark:border-gray-700">
+      {/* Modal content */}
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Edit Question
+          </h2>
+          <button 
+            onClick={() => setIsEditModalOpen(false)}
+            className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {currentQuestion && (
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+            {/* Question Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Question
+              </label>
+              <input
+                type="text"
+                name="all_questions"
+                value={editForm.all_questions || ""}
+                onChange={handleEditChange}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Difficulty & Type */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Difficulty Level
+                </label>
+                <select
+                  name="difficulty_level"
+                  value={editForm.difficulty_level || ""}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93biI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+')] bg-no-repeat bg-[center_right_1rem]"
+                >
+                  <option value="">Select difficulty</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Question Type
+                </label>
+                <select
+                  name="question_type"
+                  value={editForm.question_type || ""}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93biI+PHBhdGggZD0ibTYgOSA2IDYgNi02Ii8+PC9zdmc+')] bg-no-repeat bg-[center_right_1rem]"
+                >
+                  <option value="">Select type</option>
+                  <option value="multiple_choice">Multiple Choice</option>
+                  <option value="fill_in_the_blanks">Fill in the Blanks</option>
+                  <option value="true_or_false">True/False</option>
+                  <option value="short_answer">Short Answer</option>
+                  <option value="long_answer">Long Answer</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Answer Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Answer
+              </label>
+              <textarea
+                type="text"
+                name="answer"
+                value={editForm.answer || ""}
+                onChange={handleEditChange}
+                className="w-full px-4 py-6 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none transition-all"
+              />
+            </div>
+
+            {/* Options Field (Only for MCQ) */}
+            {editForm.question_type === "multiple_choice" && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Options
+                </label>
+                <div className="space-y-3">
+                  {editForm.options.map((option, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-lime-800 dark:text-blue-200 font-medium text-sm">
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <input
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-lg bg-lime-500 hover:bg-lime-400 text-white font-medium transition-colors shadow-sm hover:shadow-md"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };

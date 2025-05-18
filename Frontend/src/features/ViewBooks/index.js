@@ -212,7 +212,7 @@ function ViewBook() {
                 >
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4 border-b-2 border-gray-200 dark:border-gray-800 pb-1">
-                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    <h2 className="sm470:text-xl text-md sm470:font-semibold font-bold text-gray-900 dark:text-white">
                       {book.name}
                     </h2>
                     <span

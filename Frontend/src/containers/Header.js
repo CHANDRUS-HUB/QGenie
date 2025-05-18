@@ -83,7 +83,7 @@ function Header() {
         <div className="flex-1">
           <label htmlFor="left-sidebar-drawer" className="btn  drawer-button">
             <Bars3Icon className="h-5 inline-block w-5" /></label>
-          <h1 className="text-2xl font-semibold ml-2">{pageTitle}</h1>
+          <h1 className="sm470:text-2xl font-semibold ml-2">{pageTitle}</h1>
         </div>
 
 

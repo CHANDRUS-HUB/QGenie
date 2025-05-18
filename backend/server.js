@@ -27,7 +27,7 @@ app.use(cookieParser());
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests from localhost:3000 and any IPs matching the regex
-    if (!origin || /10\.\d+\.\d+\.\d+\:\d+/i.test(origin) || origin === "http://localhost:3000") {
+    if (!origin || /10\.\d+\.\d+\.\d+\:\d+/i.test(origin) || origin === "http://localhost:3000" || origin === "http://192.168.203.209:3000") {
       callback(null, true); // Allow the origin
     } else {
       callback(new Error("Not allowed by CORS")); // Reject other origins

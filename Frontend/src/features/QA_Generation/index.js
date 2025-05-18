@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Page, Text, View, Document, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  PDFDownloadLink,
+} from "@react-pdf/renderer";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { FiTrash2, FiSave } from "react-icons/fi"; // Import React Icons
 import { FaRegFilePdf, FaRegFileWord } from "react-icons/fa6";
@@ -37,7 +44,6 @@ export default function QuestionGeneratorUI() {
   });
 
   const [fetchedQuestions, setFetchedQuestions] = useState([]);
-
 
   //get multiple questions by question IDs
   const fetchMultipleQuestionsById = async (questionIds) => {
@@ -143,9 +149,9 @@ export default function QuestionGeneratorUI() {
         return;
       }
 
-      if (!easynumQuestions && !mediumnumQuestions && !hardnumQuestions) {
+      if (!easynumQuestions || !mediumnumQuestions || !hardnumQuestions) {
         toast.error(
-          "Please enter the number of questions for at least one difficulty level"
+          "Please enter the number of questions for difficulty level"
         );
         return;
       }
@@ -486,22 +492,23 @@ export default function QuestionGeneratorUI() {
 
   //provide export for generated questions in pdf format
 
-
-  
   const styles = StyleSheet.create({
     page: { padding: 30 },
     section: { marginBottom: 10 },
     question: { fontSize: 12, marginBottom: 5 },
     option: { fontSize: 10, marginLeft: 10 },
-    answer: { fontSize: 10, fontStyle: 'italic', color: 'green' }
+    answer: { fontSize: 10, fontStyle: "italic", color: "green" },
   });
-  
+
   const MyPDF = ({ questions }) => (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={{ fontSize: 20, marginBottom: 20 }}>Generated Questions</Text>
+        <Text style={{ fontSize: 20, marginBottom: 20 }}>
+          Generated Questions
+        </Text>
         <Text style={{ fontSize: 12, marginBottom: 10 }}>
-          Question Type: {fetchedQuestions.length > 0
+          Question Type:{" "}
+          {fetchedQuestions.length > 0
             ? fetchedQuestions[0].question_type.replace(/_/g, " ")
             : "No Question Type Found"}
         </Text>
@@ -513,13 +520,13 @@ export default function QuestionGeneratorUI() {
             <Text style={styles.question}>
               {i + 1}. {q.all_questions}
             </Text>
-            {Array.isArray(q.options) && q.options.length > 0 && (
+            {Array.isArray(q.options) &&
+              q.options.length > 0 &&
               q.options.map((opt, idx) => (
                 <Text key={idx} style={styles.option}>
                   {String.fromCharCode(65 + idx)}) {opt}
                 </Text>
-              ))
-            )}
+              ))}
             <Text style={styles.answer}>Answer: {q.answer}</Text>
           </View>
         ))}
@@ -531,15 +538,23 @@ export default function QuestionGeneratorUI() {
       console.error("No questions to export.");
       return;
     }
-  
-    const questionHtml = fetchedQuestions.map((q, index) => {
-      const optionsHtml = Array.isArray(q.options)
-        ? q.options.map((opt, i) => `<li>${String.fromCharCode(65 + i)}) ${opt}</li>`).join("")
-        : "";
-  
-      return `
+
+    const questionHtml = fetchedQuestions
+      .map((q, index) => {
+        const optionsHtml = Array.isArray(q.options)
+          ? q.options
+              .map(
+                (opt, i) => `<li>${String.fromCharCode(65 + i)}) ${opt}</li>`
+              )
+              .join("")
+          : "";
+
+        return `
         <div style="margin-bottom: 20px;">
-          <p><strong>Question Type:</strong> ${q.question_type.replace(/_/g, " ")}</p>
+          <p><strong>Question Type:</strong> ${q.question_type.replace(
+            /_/g,
+            " "
+          )}</p>
           <p><strong>Difficulty Level:</strong> ${q.difficulty_level}</p>
           <h3>Q${index + 1}. ${q.all_questions}</h3>
           
@@ -548,8 +563,9 @@ export default function QuestionGeneratorUI() {
             
         </div>
       `;
-    }).join("");
-  
+      })
+      .join("");
+
     const content = `
       <html>
         <head>
@@ -562,7 +578,7 @@ export default function QuestionGeneratorUI() {
         </body>
       </html>
     `;
-  
+
     const blob = htmlDocx.asBlob(content);
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -571,9 +587,9 @@ export default function QuestionGeneratorUI() {
     link.click();
     document.body.removeChild(link);
   };
-// provide export for generated questions in word format
+  // provide export for generated questions in word format
   return (
-    <div className="min-h-screen flex flex-col items-center text-white px-4 py-6">
+    <div className="min-h-screen flex flex-col items-center text-white sm470:px-4 py-6">
       <Toaster />
 
       <motion.header
@@ -582,15 +598,14 @@ export default function QuestionGeneratorUI() {
         transition={{ duration: 0.6 }}
         className="mb-6 text-center rounded-xl shadow-xl dark:shadow-green-600 bg-white/0 dark:shadow-md p-6 w-full max-w-5xl mx-auto"
       >
-        
-        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent drop-shadow-md">
+        <h1 className="sm470:text-5xl text-xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent drop-shadow-md">
           QGENIE <span className="font-light">Questions Generator</span>
         </h1>
       </motion.header>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 bg-white rounded-xl p-8 shadow-lg">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 bg-white rounded-xl p-5 shadow-lg">
         <div>
-          <label className="block text-lg font-semibold text-gray-800 mb-2">
+          <label className="block sm470:text-lg font-semibold text-gray-800 mb-2">
             Book
           </label>
           <div className="relative">
@@ -599,7 +614,7 @@ export default function QuestionGeneratorUI() {
               onChange={(e) =>
                 setSelections((prev) => ({ ...prev, Book: e.target.value }))
               }
-              className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border  border-gray-300 rounded-lg text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select Book</option>
               {books.map((book) => (
@@ -613,7 +628,7 @@ export default function QuestionGeneratorUI() {
 
         {/* Chapter Modal Dropdown */}
         <div>
-          <label className="block text-lg font-semibold text-gray-800 mb-2">
+          <label className="block sm470:text-lg font-semibold text-gray-800 mb-2">
             Chapter
           </label>
           <button
@@ -689,7 +704,7 @@ export default function QuestionGeneratorUI() {
         </div>
 
         <div className="">
-          <label className="block text-lg font-semibold text-gray-800 mb-2">
+          <label className="block sm470:text-lg  font-semibold text-gray-800 mb-2">
             Topic
           </label>
           <button
@@ -778,7 +793,7 @@ export default function QuestionGeneratorUI() {
         </div>
 
         <div>
-          <label className="block text-lg font-semibold text-gray-800 mb-2">
+          <label className="block sm470:text-lg font-semibold text-gray-800 mb-2">
             Question Type
           </label>
           <select
@@ -799,19 +814,18 @@ export default function QuestionGeneratorUI() {
             <option value="short_answer">Short Answer</option>
             <option value="long_answer">Long Answer</option>
             <option value="true_or_false">True/False</option>
-        
           </select>
         </div>
 
         <div className="space-y-4">
-          <label className="block text-lg font-semibold text-gray-800">
-            Difficulty
+          <label className="block sm470:text-lg font-semibold text-gray-800">
+            Difficulty Level
           </label>
-          <div className="flex gap-4">
+          <div className="sm470:flex  gap-4 ">
             <div
-              className={`p-3 rounded-lg border-2 ${
+              className={`p-3 mb-2 sm470:mb-0 rounded-lg border-2 ${
                 difficulty === "Easy" ? "border-green-600" : "border-gray-300"
-              } bg-green-100 cursor-pointer w-32`}
+              } bg-green-100 cursor-pointer sm470:w-32`}
               onClick={() => setDifficulty("Easy")}
             >
               <div className="flex items-center gap-2">
@@ -824,66 +838,86 @@ export default function QuestionGeneratorUI() {
                 type="number"
                 value={easynumQuestions}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  if (value >= 1 && value <= 5) {
+                  const rawValue = e.target.value;
+                  const value = parseInt(rawValue, 10);
+
+                  if (rawValue === "") {
+                    seteasyNumQuestions(""); // allow clearing temporarily
+                  } else if (!isNaN(value) && value >= 1 && value <= 5) {
                     seteasyNumQuestions(value);
                   }
                 }}
-                className="mt-2 w-full p-2 border-none focus:outline-none text-gray-800 bg-transparent"
+                className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 bg-white"
                 placeholder="No. of Questions"
               />
             </div>
 
-            <div
-              className={`p-3 rounded-lg border-2 ${
-                difficulty === "Medium"
-                  ? "border-yellow-600"
-                  : "border-gray-300"
-              } bg-yellow-100 cursor-pointer w-32`}
-              onClick={() => setDifficulty("Medium")}
-            >
-              <div className="flex items-center gap-2">
-                <Gauge className="text-yellow-600 text-lg" />
-                <span className="text-lg font-semibold text-yellow-800">
-                  Medium
-                </span>
-              </div>
-              <input
-                type="number"
-                value={mediumnumQuestions}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  if (value >= 1 && value <= 5) {
-                    setmediumNumQuestions(value);
-                  }
-                }}
-                className="mt-2 w-full p-2 border-none focus:outline-none text-gray-800 bg-transparent"
-                placeholder="No. of Questions"
-              />
-            </div>
-            <div
-              className={`p-3 rounded-lg border-2 ${
-                difficulty === "Hard" ? "border-red-600" : "border-gray-300"
-              } bg-red-100 cursor-pointer w-32`}
-              onClick={() => setDifficulty("Hard")}
-            >
-              <div className="flex items-center gap-2">
-                <Gauge className="text-red-600 text-lg" />
-                <span className="text-lg font-semibold text-red-800">Hard</span>
-              </div>
-              <input
-                type="number"
-                value={hardnumQuestions}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  if (value >= 1 && value <= 5) {
-                    sethardNumQuestions(value);
-                  }
-                }}
-                className="mt-2 w-full p-2 border-none focus:outline-none text-gray-800 bg-transparent"
-                placeholder="No. of Questions"
-              />
-            </div>
+         <div
+  className={`p-3 mb-2 sm470:mb-0 rounded-lg border-2 ${
+    difficulty === "Medium" ? "border-yellow-600" : "border-gray-300"
+  } bg-yellow-100 cursor-pointer sm470:w-32`}
+  onClick={() => setDifficulty("Medium")}
+>
+  <div className="flex items-center gap-2">
+    <Gauge className="text-yellow-600 text-lg" />
+    <span className="text-lg font-semibold text-yellow-800">
+      Medium
+    </span>
+  </div>
+  
+  <input
+    type="number"
+    min={1}
+    max={5}
+    value={mediumnumQuestions}
+    onChange={(e) => {
+      const rawValue = e.target.value;
+      const value = parseInt(rawValue, 10);
+
+      if (rawValue === "") {
+        setmediumNumQuestions(""); // allow temporary empty input
+      } else if (!isNaN(value) && value >= 1 && value <= 5) {
+        setmediumNumQuestions(value);
+      }
+    }}
+    className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 bg-white"
+    placeholder="No. of Questions"
+  />
+</div>
+
+          <div
+  className={`p-3 rounded-lg border-2 ${
+    difficulty === "Hard" ? "border-red-600" : "border-gray-300"
+  } bg-red-100 cursor-pointer sm470:w-32`}
+  onClick={() => setDifficulty("Hard")}
+>
+  <div className="flex items-center gap-2">
+    <Gauge className="text-red-600 text-lg" />
+    <span className="text-lg font-semibold text-red-800">
+      Hard
+    </span>
+  </div>
+
+  <input
+    type="number"
+    min={1}
+    max={5}
+    value={hardnumQuestions}
+    onChange={(e) => {
+      const rawValue = e.target.value;
+      const value = parseInt(rawValue, 10);
+
+      if (rawValue === "") {
+        sethardNumQuestions(""); // allow temporary empty input
+      } else if (!isNaN(value) && value >= 1 && value <= 5) {
+        sethardNumQuestions(value);
+      }
+    }}
+    className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800 bg-white"
+    placeholder="No. of Questions"
+  />
+</div>
+
           </div>
         </div>
       </div>
@@ -909,160 +943,166 @@ export default function QuestionGeneratorUI() {
       </div>
       <AnimatePresence>
         {showModal && (
-          <div className="bg-white">            
-          <div  className="fixed inset-0 z-50 bg-black  bg-opacity-60 flex items-center justify-center px-4">
-          
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}  
-              className="bg-white dark:bg-gray-900 w-full max-w-4xl rounded-lg shadow-2xl p-8 overflow-y-auto max-h-[90vh] transition-transform transform"
-            >
-           <PDFDownloadLink document={<MyPDF questions={fetchedQuestions} />} fileName="questions.pdf">
-          {({ loading }) => (
-            <button className="bg-red-500 text-white px-4 py-2 mr-2 rounded">{loading ? 'Loading...' : <FaRegFilePdf />}</button>
-          )}
-        </PDFDownloadLink>
-             <button
-                       onClick={exportToWord}
-                       className="bg-blue-500 text-white px-4 py-2 rounded"
-                     >
-                       <FaRegFileWord />
-                     </button>
-           <div id="question-export">
-              <h1 className="text-center text-2xl font-medium text-black dark:text-white">
-                {" "}
-                Generated Questions
-              </h1>
-              <h1 className="text-xl mt-2 font-semibold text-gray-400 mb-6">
-                Question Type:{" "}
-                <span className="text-lime-400">
-                  {fetchedQuestions.length > 0
-                    ? fetchedQuestions[0].question_type.replace(/_/g, " ")
-                    : "No Question Type Found"}
-                </span>
-              </h1>
-
-              {fetchedQuestions.map((question, index) => (
-                <div
-                  key={question.question_id}
-                  className="mb-8 border p-4 rounded-lg shadow-md bg-gray-100 "
+          <div className="bg-white">
+            <div className="fixed inset-0 z-50 bg-black  bg-opacity-60 flex items-center justify-center px-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white dark:bg-gray-900 w-full max-w-4xl rounded-lg shadow-2xl p-8 overflow-y-auto max-h-[90vh] transition-transform transform"
+              >
+                <PDFDownloadLink
+                  document={<MyPDF questions={fetchedQuestions} />}
+                  fileName="questions.pdf"
                 >
-                  <div className="flex justify-end items-center">
-                    <button
-                      onClick={() => handleDelete(question.question_id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <FiTrash2 size={20} />
+                  {({ loading }) => (
+                    <button className="bg-red-500 text-white px-4 py-2 mr-2 rounded">
+                      {loading ? "Loading..." : <FaRegFilePdf />}
                     </button>
-                  </div>
-
-                  <div className="">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Difficulty Level:
-                      <span className="text-lime-500">
-                      {" " + question.difficulty_level}
-                      </span>
-                    </label>
-
-                    <span className="block text-sm font-medium text-gray-700  ">
-                      Question:
+                  )}
+                </PDFDownloadLink>
+                <button
+                  onClick={exportToWord}
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                  <FaRegFileWord />
+                </button>
+                <div id="question-export">
+                  <h1 className="text-center mt-2 text-2xl font-medium text-black dark:text-white">
+                    {" "}
+                    Generated Questions
+                  </h1>
+                  <h1 className="text-xl mt-2 font-semibold text-gray-400 mb-6">
+                    Question Type:{" "}
+                    <span className="text-lime-400">
+                      {fetchedQuestions.length > 0
+                        ? fetchedQuestions[0].question_type.replace(/_/g, " ")
+                        : "No Question Type Found"}
                     </span>
-                    <div className="relative mb-4">
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-600 font-medium">
-                        {index + 1}.
-                      </span>
-                      <div className="pl-6">
-                        <div className="relative w-full">
-                          <input
-                            type="text"
-                            value={question.all_questions}
-                            onChange={(e) =>
-                              handleEdit(
-                                question.question_id,
-                                "all_questions",
-                                e.target.value
-                              )
-                            }
-                            className="w-full h-10  border-b-2 border-gray-300 bg-gray-100 text-gray-700 outline-none px-1   transition-all duration-300 focus:border-lime-500 resize-none"
-                          />
-                          <span className="absolute left-0 bottom-[6px] w-0 h-0.5 bg-lime-500 transition-all duration-300 origin-left group-focus-within:w-full"></span>
+                  </h1>
+
+                  {fetchedQuestions.map((question, index) => (
+                    <div
+                      key={question.question_id}
+                      className="mb-8 border p-4 rounded-lg shadow-md bg-gray-100 "
+                    >
+                      <div className="flex justify-end items-center">
+                        <button
+                          onClick={() => handleDelete(question.question_id)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <FiTrash2 size={20} />
+                        </button>
+                      </div>
+
+                      <div className="">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Difficulty Level:
+                          <span className="text-lime-500">
+                            {" " + question.difficulty_level}
+                          </span>
+                        </label>
+
+                        <span className="block text-sm font-medium text-gray-700  ">
+                          Question:
+                        </span>
+                        <div className="relative mb-4">
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-600 font-medium">
+                            {index + 1}.
+                          </span>
+                          <div className="pl-6">
+                            <div className="relative w-full">
+                              <input
+                                type="text"
+                                value={question.all_questions}
+                                onChange={(e) =>
+                                  handleEdit(
+                                    question.question_id,
+                                    "all_questions",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full h-10  border-b-2 border-gray-300 bg-gray-100 text-gray-700 outline-none px-1   transition-all duration-300 focus:border-lime-500 resize-none"
+                              />
+                              <span className="absolute left-0 bottom-[6px] w-0 h-0.5 bg-lime-500 transition-all duration-300 origin-left group-focus-within:w-full"></span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {Array.isArray(question.options) &&
-                    question.options.length > 0 && (
-                      <div className="mb-6 bg-yellow-200/50 p-5 rounded-xl">
-                        <span className="block text-sm font-medium text-gray-700 mb-2">
-                          Options:
-                        </span>
-                        {question.options.map((option, idx) => (
-                          <div key={idx} className="flex items-center mb-2">
-                            <span className="text-gray-700 font-medium mr-2">
-                              {String.fromCharCode(65 + idx)})
+                      {Array.isArray(question.options) &&
+                        question.options.length > 0 && (
+                          <div className="mb-6 bg-yellow-200/50 p-5 rounded-xl">
+                            <span className="block text-sm font-medium text-gray-700 mb-2">
+                              Options:
                             </span>
-                            <input
-                              type="text"
-                              className="w-full h-10 border-b-2 border-gray-300 bg-yellow-100/50 text-gray-700 outline-none px-1 transition-all duration-300 focus:border-lime-500 resize-none"
-                              value={option}
-                              onChange={(e) =>
-                                handleEdit(question.question_id, "options", [
-                                  ...question.options.slice(0, idx),
-                                  e.target.value,
-                                  ...question.options.slice(idx + 1),
-                                ])
-                              }
-                            />
+                            {question.options.map((option, idx) => (
+                              <div key={idx} className="flex items-center mb-2">
+                                <span className="text-gray-700 font-medium mr-2">
+                                  {String.fromCharCode(65 + idx)})
+                                </span>
+                                <input
+                                  type="text"
+                                  className="w-full h-10 border-b-2 border-gray-300 bg-yellow-100/50 text-gray-700 outline-none px-1 transition-all duration-300 focus:border-lime-500 resize-none"
+                                  value={option}
+                                  onChange={(e) =>
+                                    handleEdit(
+                                      question.question_id,
+                                      "options",
+                                      [
+                                        ...question.options.slice(0, idx),
+                                        e.target.value,
+                                        ...question.options.slice(idx + 1),
+                                      ]
+                                    )
+                                  }
+                                />
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+
+                      <div className="mb-6">
+                        <span className="block text-sm font-medium text-gray-700  mb-2">
+                          Answer:
+                        </span>
+                        <textarea
+                          type="text"
+                          className="w-full border border-gray-300 rounded-lg dark:bg-white p-4 mb-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                          value={question.answer}
+                          onChange={(e) =>
+                            handleEdit(
+                              question.question_id,
+                              "answer",
+                              e.target.value
+                            )
+                          }
+                        />
                       </div>
-                    )}
 
-                  <div className="mb-6">
-                    <span className="block text-sm font-medium text-gray-700  mb-2">
-                      Answer:
-                    </span>
-                    <textarea
-                      type="text"
-                      className="w-full border border-gray-300 rounded-lg dark:bg-white p-4 mb-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-lime-500"
-                      value={question.answer}
-                      onChange={(e) =>
-                        handleEdit(
-                          question.question_id,
-                          "answer",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => handleUpdate(question)}
+                          className="bg-green-500 text-white px-6 py-2 rounded-lg text-sm hover:bg-green-600 inline-flex transition-all"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ))}
 
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => handleUpdate(question)}
-                      className="bg-green-500 text-white px-6 py-2 rounded-lg text-sm hover:bg-green-600 inline-flex transition-all"
-                    >
-                      Save
-                    </button>
-                  </div>
+                  {/* Close Button */}
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="font-medium bg-green-500 hover:bg-lime-500 text-white px-5 py-2 rounded-lg transition-colors duration-300 ease-in-out"
+                  >
+                    Close
+                  </button>
                 </div>
-              ))}
-
-              {/* Close Button */}
-              <button
-                onClick={() => setShowModal(false)}
-                className="font-medium bg-green-500 hover:bg-lime-500 text-white px-5 py-2 rounded-lg transition-colors duration-300 ease-in-out"
-              >
-                Close
-              </button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
-          
-          </div>
-
         )}
       </AnimatePresence>
     </div>

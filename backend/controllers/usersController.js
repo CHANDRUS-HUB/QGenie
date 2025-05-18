@@ -314,6 +314,9 @@ const updateUser = async (req, res) => {
     }
 };
 
+//update user by admin
+
+
 //get all users
 const getAllUsers = async (req, res) => {
     try {
@@ -324,6 +327,11 @@ const getAllUsers = async (req, res) => {
                     model: Book,
                     as: 'Books',
                     attributes: ['book_id', 'title'], // Include only the necessary fields
+                },
+                {
+                    model: Question,
+                    as: 'questions',
+                    // attributes: ['question_id', 'all_questions','book_id'], // Include only the necessary fields
                 },
             ],
         

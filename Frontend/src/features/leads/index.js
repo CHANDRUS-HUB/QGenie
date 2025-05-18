@@ -198,7 +198,7 @@ function Leads() {
         transition={{ duration: 0.6 }}
         className="mb-6 text-center rounded-xl shadow-xl dark:shadow-green-600 bg-white/0 dark:shadow-md p-6 w-full max-w-5xl mx-auto"
       >
-        <h1 className="text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent  drop-shadow-md">
+        <h1 className="sm470:text-5xl text-2xl  font-extrabold tracking-tight bg-gradient-to-r from-green-500 to-lime-400 bg-clip-text text-transparent  drop-shadow-md">
           QGENIE <span className="font-light">Questions Generator</span>
         </h1>
       </motion.header>
@@ -400,11 +400,11 @@ function Leads() {
       </TitleCard>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+        <div className="fixed inset-0 flex items-center justify-center p-5 sm470:p-0 z-50 bg-black bg-opacity-40">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8 animate-fade-in">
             <div className="border-b pb-4 mb-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-3xl font-semibold text-gray-800">
+                <h3 className="sm470:text-3xl text-xl font-semibold  text-gray-800">
                   📘 Book Details
                 </h3>
                 <span
@@ -420,39 +420,39 @@ function Leads() {
 
               <p className="text-gray-500 text-sm mt-1">
                 {responseContent?.message ||
-                  "The response from the server will be displayed here."}
+                  "The book has been analyzed, and the results."}
               </p>
             </div>
 
             {responseContent?.book && (
               <div className="space-y-3 text-gray-700 text-base">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm470:grid-cols-2  gap-4">
                   <div>
-                    <span className="font-medium text-gray-900">Title:</span>{" "}
+                    <span className="font-bold  text-gray-900">Title:</span>{" "}
                     {responseContent.book.title || "N/A"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">Subject:</span>{" "}
+                    <span className="font-bold text-gray-900">Subject:</span>{" "}
                     {responseContent.book.subject || "-"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-bold text-gray-900">
                       Class Name:
                     </span>{" "}
                     {responseContent.book.class_name + " Standard" || "-"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">Medium:</span>{" "}
+                    <span className="font-bold text-gray-900">Medium:</span>{" "}
                     {responseContent.book.medium || "-"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-bold text-gray-900">
                       Total Chapters:
                     </span>{" "}
                     {responseContent.book.total_chapters || "-"}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-bold text-gray-900">
                       Total Topics:
                     </span>{" "}
                     {responseContent.book.metadata?.totalTopics || "N/A"}
