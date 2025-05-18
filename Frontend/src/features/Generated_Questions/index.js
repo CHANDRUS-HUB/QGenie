@@ -43,6 +43,13 @@ const Generated_Questions = () => {
           Array.isArray(response.data?.data) ? response.data.data : []
         );
       } catch (error) {
+        const response = error.response;
+        if (401 === response.status) {
+          toast.error("Session expired. Please login again.");
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 2000);
+        }
         console.error("Error fetching questions:", error);
         toast.error("Failed to fetch questions");
         setQuestions([]);

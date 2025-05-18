@@ -97,8 +97,8 @@ const resendOTP = async (req, res) => {
         return res.status(400).json({ errors });
     }
     try {
-        const user = await User.findOne({ where: { email } });
-        if (!user) return res.status(404).json({ message: "Email not found." });
+        // const user = await User.findOne({ where: { email } });
+        // if (!user) return res.status(404).json({ message: "Email not found." });
         const otp = generateOTP();
         otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 }; // 5 minutes expiration
         await sendOTPEmail(email, otp);

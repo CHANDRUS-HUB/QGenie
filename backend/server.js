@@ -47,17 +47,17 @@ app.use("/", userRoutes,bookRouters,questionROutes);
 // Routes
 
 
-// const buildPath = path.join(__dirname, "../Frontend/build");
-// app.use(express.static(buildPath));
+const buildPath = path.join(__dirname, "../Frontend/build");
+app.use(express.static(buildPath));
 
-// app.get("*", (req, res) => {
-//   try {
-//     res.sendFile(path.join(buildPath, "index.html"));
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
+app.get("*", (req, res) => {
+  try {
+    res.sendFile(path.join(buildPath, "index.html"));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Sync the database
 sequelize.sync({ alter: true })

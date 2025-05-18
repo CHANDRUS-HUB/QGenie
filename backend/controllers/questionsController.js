@@ -83,7 +83,7 @@ function buildPrompt(
       "question_difficulty_level": "easy|medium|hard",
       "question": "Your question here",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Correct option letter (A, B, C, or D) with answer"
+      "answer": "Correct answer"
     }
   ]
 }`;
@@ -117,7 +117,7 @@ function buildPrompt(
       "question": "Your logical statement here",
       "question": "Based on the above statement, which conclusion logically follows?",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Correct option letter with answer"
+      "answer": "Correct answer"
     }
   ]
 }`;

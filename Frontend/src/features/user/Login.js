@@ -106,7 +106,7 @@ function Login(){
                         </div>
 
                         <ErrorText styleClass="mt-8">{errorMessage}</ErrorText>
-                        <button type="submit" className={"btn mt-2 w-full bg-gradient-to-r from-green-500 to-lime-500 text-white transition duration-300 ease-in-out transform hover:scale-105 hover:from-lime-500 hover:to-green-500" + (loading ? " loading" : "")}>Login</button>
+                        <button type="submit" className={"btn mt-2 w-full bg-gradient-to-r from-green-500 to-lime-500 text-white transition duration-300 ease-in-out transform hover:scale-105" + (loading ? " loading" : "")}>Login</button>
 
                         <div className='text-center mt-4'>Don't have an account yet? <Link to="/register"><span className="  inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">Register</span></Link></div>
                     </form>

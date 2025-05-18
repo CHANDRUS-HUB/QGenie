@@ -13,6 +13,7 @@ function Register() {
     const INITIAL_REGISTER_OBJ = {
         name: '',
         password: '',
+        confirmPassword: '',
         phoneNumber: '',
         role: 'Teacher',
         emailId: ''
@@ -22,19 +23,88 @@ function Register() {
     const [errorMessage, setErrorMessage] = useState('');
     const [registerObj, setRegisterObj] = useState(INITIAL_REGISTER_OBJ);
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [step, setStep] = useState('register');
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [timer, setTimer] = useState(320);
+    const [timer, setTimer] = useState(60);
     const [resendDisabled, setResendDisabled] = useState(true);
+    const [nameError, setNameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
     const otpInputs = useRef([]);
     const navigate = useNavigate();
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
+    const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
     const updateFormValue = ({ updateType, value }) => {
         setErrorMessage('');
         setRegisterObj({ ...registerObj, [updateType]: value });
+        
+        // Validate fields on change
+        if (updateType === 'name') {
+            if (value.trim() === '') {
+                setNameError('Name is required!');
+            } else if (!value.match(/^[a-zA-Z ]+$/)) {
+                setNameError('Name can only contain letters');
+            } else if (value.length > 30) {
+                setNameError('Name cannot exceed 30 characters');
+            } else {
+                setNameError('');
+            }
+        }
+        
+        if (updateType === 'emailId') {
+            if (value.trim() === '') {
+                setEmailError('Email Id is required!');
+            } else if (!value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+                setEmailError('Email Id is not valid');
+            } else {
+                setEmailError('');
+            }
+        }
+        
+        if (updateType === 'password') {
+            validatePassword(value);
+            // Also validate confirm password if it exists
+            if (registerObj.confirmPassword) {
+                validateConfirmPassword(registerObj.confirmPassword, value);
+            }
+        }
+        
+        if (updateType === 'confirmPassword') {
+            validateConfirmPassword(value, registerObj.password);
+        }
+    };
+
+    const validatePassword = (password) => {
+        if (password.trim() === '') {
+            setPasswordError('Password is required!');
+        } else if (password.length < 8) {
+            setPasswordError('Password must be at least 8 characters');
+        } else if (!/[A-Z]/.test(password)) {
+            setPasswordError('Password must have one uppercase letter');
+        } else if (!/[a-z]/.test(password)) {
+            setPasswordError('Password must have one lowercase letter');
+        } else if (!/[0-9]/.test(password)) {
+            setPasswordError('Password must have one number');
+        } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            setPasswordError('Password must have one special character');
+        } else {
+            setPasswordError('');
+        }
+    };
+
+    const validateConfirmPassword = (confirmPassword, password) => {
+        if (confirmPassword.trim() === '') {
+            setConfirmPasswordError('Please confirm your password');
+        } else if (confirmPassword !== password) {
+            setConfirmPasswordError('Passwords do not match');
+        } else {
+            setConfirmPasswordError('');
+        }
     };
 
     useEffect(() => {
@@ -53,26 +123,26 @@ function Register() {
         e.preventDefault();
         setErrorMessage('');
 
-        if (registerObj.name.trim() === '')
-            return setErrorMessage('Name is required!');
-        else if (!registerObj.name.match(/^[a-zA-Z ]+$/))
-            return setErrorMessage('Name can only contain letters');
-        if (registerObj.emailId.trim() === '')
-            return setErrorMessage('Email Id is required!');
-        else if (!registerObj.emailId.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
-            return setErrorMessage('Email Id is not valid');
-        if (registerObj.password.trim() === '')
-            return setErrorMessage('Password is required!');
-        else if (registerObj.password.length < 8)
-            return setErrorMessage('Password must be at least 8 characters');
-        else if (!/[A-Z]/.test(registerObj.password))
-            return setErrorMessage('Password must have one uppercase letter');
-        else if (!/[a-z]/.test(registerObj.password))
-            return setErrorMessage('Password must have one lowercase letter');
-        else if (!/[0-9]/.test(registerObj.password))
-            return setErrorMessage('Password must have one number');
-        else if (!/[!@#$%^&*(),.?":{}|<>]/.test(registerObj.password))
-            return setErrorMessage('Password must have one special character');
+        // Validate all fields before submission
+        if (registerObj.name.trim() === '') {
+            setNameError('Name is required!');
+            return;
+        }
+        if (registerObj.emailId.trim() === '') {
+            setEmailError('Email Id is required!');
+            return;
+        }
+        if (registerObj.password.trim() === '') {
+            setPasswordError('Password is required!');
+            return;
+        }
+        if (registerObj.confirmPassword.trim() === '') {
+            setConfirmPasswordError('Please confirm your password');
+            return;
+        }
+        if (nameError || emailError || passwordError || confirmPasswordError) {
+            return;
+        }
 
         try {
             setLoading(true);
@@ -84,7 +154,7 @@ function Register() {
             }, { withCredentials: true });
 
             toast.success("OTP sent to your email.");
-            setTimer(320);
+            setTimer(60);
             setResendDisabled(true);
             setStep("otp");
         } catch (error) {
@@ -119,20 +189,20 @@ function Register() {
 
     const resendOTP = async () => {
         try {
-          setResendDisabled(true);
-          setTimer(60);
+            setResendDisabled(true);
+            setTimer(60);
     
-          await axios.post(`${baseUrl}/resend-otp`, {
-            email: registerObj.emailId,
-            username: registerObj.name,
-          });
+            await axios.post(`${baseUrl}/resend-otp`, {
+                email: registerObj.emailId,
+                username: registerObj.name,
+            });
     
-          toast.success('OTP resent to your email.');
+            toast.success('OTP resent to your email.');
         } catch (err) {
-          toast.error(err.response?.data?.message || 'Failed to resend OTP');
-          setResendDisabled(false);
+            toast.error(err.response?.data?.message || 'Failed to resend OTP');
+            setResendDisabled(false);
         }
-      };
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-tr from-lime-100 via-white to-green-100 flex items-center justify-center">
@@ -156,14 +226,26 @@ function Register() {
                                     containerStyle="mt-4"
                                     labelTitle="Full Name"
                                     updateFormValue={updateFormValue}
+                                    Oncustomchange={(e) => {
+                                        const value = e.target.value.replace(/[^a-zA-Z ]/g, '');
+                                        updateFormValue({ updateType: 'name', value });
+                                    }}
                                 />
+                                {nameError && <ErrorText styleClass="mt-1">{nameError}</ErrorText>}
+
                                 <InputText
                                     value={registerObj.emailId}
                                     updateType="emailId"
                                     containerStyle="mt-4"
                                     labelTitle="Email"
                                     updateFormValue={updateFormValue}
+                                    Oncustomchange={(e) => {
+                                        const value = e.target.value.replace(/[^a-zA-Z0-9@.]/g, '');
+                                        updateFormValue({ updateType: 'emailId', value });
+                                    }}
                                 />
+                                {emailError && <ErrorText styleClass="mt-1">{emailError}</ErrorText>}
+
                                 <div className="relative mt-4">
                                     <InputText
                                         value={registerObj.password}
@@ -181,10 +263,42 @@ function Register() {
                                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                                     </button>
                                 </div>
+                                {passwordError && <ErrorText styleClass="mt-1">{passwordError}</ErrorText>}
+
+                                <div className="relative mt-4">
+                                    <InputText
+                                        value={registerObj.confirmPassword}
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        updateType="confirmPassword"
+                                        containerStyle="mt-4"
+                                        labelTitle="Confirm Password"
+                                        updateFormValue={updateFormValue}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 bottom-2 transform -translate-y-1/2 text-gray-500 focus:outline-none"
+                                        onClick={toggleConfirmPasswordVisibility}
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                                {confirmPasswordError && <ErrorText styleClass="mt-1">{confirmPasswordError}</ErrorText>}
 
                                 <ErrorText styleClass="mt-6">{errorMessage}</ErrorText>
-                                <button type="submit" className="btn mt-4 w-full bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold hover:scale-105 transition-all">
-                                    {loading ? "Submitting..." : "Register"}
+                                <button
+                                    type="submit"
+                                    className="btn mt-4 w-full bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold hover:scale-105 transition-all disabled:text-white disabled:cursor-not-allowed"
+                                    disabled={loading || nameError || emailError || passwordError || confirmPasswordError}
+                                >
+                                    {loading ? (
+                                        <span className="flex items-center justify-center">
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </span>
+                                    ) : "Register"}
                                 </button>
 
                                 <p className="text-sm text-center mt-4">
@@ -194,9 +308,12 @@ function Register() {
                         </>
                     ) : (
                         <>
+                        <div className="flex flex-col items-center justify-center h-full">
                             <h2 className="text-2xl font-bold text-center text-green-600 mb-6">Verify Email</h2>
-                            <p className="text-center text-sm text-gray-500 mb-4">Enter the 6-digit code sent to your email</p>
-                            <form onSubmit={submitOTP}>
+                            <p className="text-center text-sm text-gray-500 mb-4">
+                                Enter the 6-digit code sent to {registerObj.emailId}
+                            </p>
+                            <form onSubmit={submitOTP} className="w-full">
                                 <div className="flex justify-center gap-3">
                                     {otp.map((digit, index) => (
                                         <input
@@ -222,26 +339,53 @@ function Register() {
                                         />
                                     ))}
                                 </div>
-
-                                <ErrorText styleClass="mt-6">{errorMessage}</ErrorText>
-                                <button type="submit" className="btn btn-success w-full mt-4">
+                    
+                                <ErrorText styleClass="mt-6 text-center">{errorMessage}</ErrorText>
+                                <button 
+                                    type="submit" 
+                                    className="btn w-full mt-4 bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold hover:scale-105 transition-all"
+                                >
                                     Verify OTP
                                 </button>
-
+                    
                                 <div className="text-center mt-4">
                                     <button
                                         type="button"
-                                        onClick={resendOTP}
+                                        onClick={async () => {
+                                            try {
+                                                setResendDisabled(true);
+                                                setTimer(60);
+                                                await resendOTP();
+                                            } catch (error) {
+                                                // setErrorMessage(error.response?.data?.message || "Failed to resend OTP");
+                                                toast.error(error.response?.data?.message || "Failed to resend OTP");
+                                                setResendDisabled(false);
+                                            }
+                                        }}
                                         className={`text-sm font-medium ${
                                             resendDisabled ? 'text-gray-400' : 'text-green-600 hover:underline'
                                         }`}
                                         disabled={resendDisabled}
                                     >
-                                        Resend OTP {resendDisabled && `in ${timer}s`}
+                                        {resendDisabled ? `Resend OTP in ${timer}s` : 'Resend OTP'}
                                     </button>
                                 </div>
+                    
+                                <p className="text-sm text-center mt-4">
+                                    Want to change email? <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            setStep('register');
+                                            setErrorMessage('');
+                                        }} 
+                                        className="text-green-600 hover:underline"
+                                    >
+                                        Go back
+                                    </button>
+                                </p>
                             </form>
-                        </>
+                        </div>
+                    </>
                     )}
                 </motion.div>
             </div>
