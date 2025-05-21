@@ -730,7 +730,7 @@ yPosition += questionLines.length * 6;  // Adjust spacing based on line count
       </div>
 
       <div className="overflow-x-auto bg-white rounded-lg shadow dark:bg-gray-800 dark:border dark:border-gray-700">
-      {questions.length === 0 ? (
+      {questions.length === 0 || table.getFilteredRowModel().rows.length === 0 ? (
             <div className="text-center text-gray-500 mb-2 dark:text-gray-300 mt-10">
                 <p>No questions available.</p>
             </div>

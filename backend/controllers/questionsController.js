@@ -82,8 +82,8 @@ function buildPrompt(
     {
       "question_difficulty_level": "easy|medium|hard",
       "question": "Your question here",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Correct answer"
+      "options": ["Option ", "Option ", "Option ", "Option "],
+      "answer": "Correct Answer"
     }
   ]
 }`;
@@ -117,7 +117,7 @@ function buildPrompt(
       "question": "Your logical statement here",
       "question": "Based on the above statement, which conclusion logically follows?",
       "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Correct answer"
+      "answer": "Correct answer in the form of a statement"
     }
   ]
 }`;
@@ -159,12 +159,12 @@ const generateQuestionsFromText = async (
 
     const response = await openai.chat.completions.create({
       
-      model: "deepseek/deepseek-r1-distill-llama-8b",
+      model: "mistralai/mistral-7b-instruct",
       messages: [
         {
           role: "system",
-          content: `You are a JSON generator bot. Your only job is to generate quiz questions in JSON format from provided content. 
-          Never include explanations, formatting, markdown, or any non-JSON text. Your response must always be a valid JSON object.`,
+          content: `You are a JSON generator bot. Your only job is to generate quiz questions in JSON format from provided content according to language (e.g., English, Tamil, or any other). 
+          Never include explanations, formatting, markdown, or any non-JSON text. Your response must always be a valid JSON object. Detect the language of the content (e.g., English, Tamil, or any other) and generate the quiz questions in the same language — this step is mandatory.`,
         },
         { role: "user", content: prompt },
       ],

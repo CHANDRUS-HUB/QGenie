@@ -14,6 +14,7 @@ import baseUrl from "../../utils/URL";
 import { motion } from "framer-motion";
 import { FaEye } from "react-icons/fa6";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 // Avatar Component
 const UserAvatar = ({ user }) => {
@@ -63,7 +64,7 @@ const TopSideButtons = ({ removeFilter, applyFilter, applySearch }) => {
         setSearchText={setSearchText}
         placeholderText="Search by Name or Email"
       />
-    
+
       {filterParam !== "" && (
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -75,7 +76,7 @@ const TopSideButtons = ({ removeFilter, applyFilter, applySearch }) => {
           <XMarkIcon className="w-4 h-4 ml-2" />
         </motion.button>
       )}
-    
+
       <div className="dropdown dropdown-end">
         <label
           tabIndex={0}
@@ -113,23 +114,32 @@ function Transactions() {
   const [trans, setTrans] = useState([]);
   const [allTrans, setAllTrans] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const fetchUserData = async () => {
+    setIsLoading(true);
     try {
       const res = await axios.get(`${baseUrl}/get-all-users`, {
         withCredentials: true,
       });
 
       const users = res.data.users;
+      if (users.length === 0) {
+        setAllTrans([]);
+        setTrans([]);
+        return;
+      }
+
       const transactions = users.map((u) => ({
         id: u.id,
         name: u.username,
         email: u.email,
-        role: u.role, // Changed from 'location' to 'role' for clarity
+        role: u.role,
         amount: Math.floor(Math.random() * 500) + 100,
-        books: u.Books || [], // Ensure books is always an array
-        questions: u.questions || {}, // Ensure questions is always an object
+        books: u.Books || [],
+        questions: u.questions || {},
         date: u.created_at,
         avatar: u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username)}&background=random`,
       }));
@@ -138,7 +148,9 @@ function Transactions() {
       setTrans(transactions);
     } catch (err) {
       console.error("Error fetching user data:", err);
-      showNotification({ message: "Failed to fetch users", status: 0 });
+      toast.error("Failed to fetch users");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -189,6 +201,7 @@ function Transactions() {
 
   return (
     <>
+     
       <TitleCard
         title={`Total Users: ${allTrans.length} | Total Books: ${allTrans.reduce(
           (acc, user) => acc + (user.books?.length || 0),
@@ -204,169 +217,193 @@ function Transactions() {
           />
         }
       >
-        <div className="overflow-x-auto w-full">
-          <motion.table
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="table w-full"
-          >
-            <thead>
-              <tr className="text-black dark:text-white">
-                <th>Name</th>
-                <th>Email Id</th>
-                <th>Role</th>
-                <th>Registered At</th>
-                <th>Uploaded Books</th>
-                <th>Generated Questions</th>
-                <th>View Books</th>
-                <th>View Questions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.map((user, index) => (
-                <motion.tr
-                  key={user.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <td>
-                    <div className="flex items-center space-x-3">
-                      <UserAvatar user={user} />
-                      <div>
-                        <div className="font-bold">{user.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>{moment(user.date).format("DD MMM YYYY hh:mm A")}</td>
-                 <td>
-  <span
-    className={`badge badge-sm cursor-help whitespace-nowrap ${
-      user.books?.length > 0
-        ? "" // Color when books exist
-        : "bg-red-300 dark:text-black"    // Color when no books
-    }`}
-    title={
-      user.books?.length > 0
-        ? user.books.map((book) => book.title).join("\n")
-        : "No books uploaded"
-    }
-  >
-    {user.books?.length > 0 ? (
-      `${user.books.length} Book${user.books.length !== 1 ? 's' : ''}`
-    ) : (
-      "No uploads"
-    )}
-  </span>
-</td>
-<td>
-  <span
-    className={`badge badge-sm cursor-help whitespace-nowrap ${
-      user.questions?.length > 0
-        ? "" // Color when questions exist
-        : "bg-red-300 dark:text-black"    // Color when no questions
-    }`}
-    title={
-      user.questions?.length > 0
-        ? `${user.questions.length} question${user.questions.length !== 1 ? 's' : ''} generated`
-        : "No questions generated"
-    }
-  >
-    {user.questions?.length > 0 ? (
-      `${user.questions.length} Question${user.questions.length !== 1 ? 's' : ''}`
-    ) : (
-      "No Questions"
-    )}
-  </span>
-</td>
-                  <td>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="p-2 rounded-lg hover:bg-gradient-to-r from-blue-200 to-sky-200 text-sky-500 transition duration-300 ease-in-out flex items-center justify-center shadow-md"
-                      onClick={() => handleViewBook(user)}
-                      title="View Book"
-                    >
-                      <FaEye />
-                    </motion.button>
-                  </td>
-                  <td>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="p-2 rounded-lg hover:bg-gradient-to-r from-green-200 to-lime-200 text-green-500 transition duration-300 ease-in-out flex items-center justify-center shadow-md"
-                      onClick={() => handleViewQuestions(user)}
-                      title="View Questions"
-                    >
-                      <FaEye />
-                    </motion.button>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </motion.table>
-
-          {/* Pagination */}
-          <div className="flex justify-center mt-4 space-x-2 items-center">
-            <button
-              className={`btn btn-sm rounded-full ${
-                currentPage === 1 ? "btn-disabled" : "btn-outline"
-              }`}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="loading loading-spinner loading-lg text-green-500"></div>
+          </div>
+        ) : allTrans.length === 0 ? (
+          <div className="text-center py-10">
+            <div className="text-gray-500 text-xl font-medium mb-4">
+              No users found
+            </div>
+            <p className="text-gray-400">
+              There are currently no users registered in the system.
+            </p>
+          </div>
+        ) : trans.length === 0 ? (
+          <div className="text-center py-10">
+            <div className="text-gray-500 text-xl font-medium mb-4">
+              No users match your search/filter criteria
+            </div>
+            <button 
+              onClick={removeFilter}
+              className="btn btn-sm bg-gradient-to-r from-green-500 to-lime-500 text-white"
             >
-              <ChevronLeftIcon />
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(
-                (page) =>
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-              )
-              .map((page, index, array) => {
-                const isPrevEllipsis =
-                  page > 2 && array[index - 1] !== page - 1;
-                const isNextEllipsis =
-                  page < totalPages - 1 && array[index + 1] !== page + 1;
-
-                return (
-                  <React.Fragment key={page}>
-                    {isPrevEllipsis && (
-                      <span className="text-gray-500">...</span>
-                    )}
-                    <button
-                      className={`btn btn-sm rounded-full ${
-                        currentPage === page
-                          ? "bg-gradient-to-r from-green-500 to-lime-500 text-white"
-                          : "btn-outline"
-                      }`}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </button>
-                    {isNextEllipsis && (
-                      <span className="text-gray-500">...</span>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-
-            <button
-              className={`btn btn-sm rounded-full ${
-                currentPage === totalPages ? "btn-disabled" : "btn-outline"
-              }`}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRightIcon />
+              Clear filters
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="overflow-x-auto w-full">
+            <motion.table
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="table w-full"
+            >
+              <thead>
+                <tr className="text-black dark:text-white">
+                  <th>Name</th>
+                  <th>Email Id</th>
+                  <th>Role</th>
+                  <th>Registered At</th>
+                  <th>Uploaded Books</th>
+                  <th>Generated Questions</th>
+                  <th>View Books</th>
+                  <th>View Questions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((user, index) => (
+                  <motion.tr
+                    key={user.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <td>
+                      <div className="flex items-center space-x-3">
+                        <UserAvatar user={user} />
+                        <div>
+                          <div className="font-bold">{user.name}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{user.email}</td>
+                    <td>{user.role}</td>
+                    <td>{moment(user.date).format("DD MMM YYYY hh:mm A")}</td>
+                    <td>
+                      <span
+                        className={`badge badge-sm cursor-help whitespace-nowrap ${user.books?.length > 0
+                            ? "" 
+                            : "bg-red-300 dark:text-black"    
+                          }`}
+                        title={
+                          user.books?.length > 0
+                            ? user.books.map((book) => book.title).join("\n")
+                            : "No books uploaded"
+                        }
+                      >
+                        {user.books?.length > 0 ? (
+                          `${user.books.length} Book${user.books.length !== 1 ? 's' : ''}`
+                        ) : (
+                          "No uploads"
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge badge-sm cursor-help whitespace-nowrap ${user.questions?.length > 0
+                            ? "" 
+                            : "bg-red-300 dark:text-black"    
+                          }`}
+                        title={
+                          user.questions?.length > 0
+                            ? `${user.questions.length} question${user.questions.length !== 1 ? 's' : ''} generated`
+                            : "No questions generated"
+                        }
+                      >
+                        {user.questions?.length > 0 ? (
+                          `${user.questions.length} Question${user.questions.length !== 1 ? 's' : ''}`
+                        ) : (
+                          "No Questions"
+                        )}
+                      </span>
+                    </td>
+                    <td>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 rounded-lg hover:bg-gradient-to-r from-blue-200 to-sky-200 text-sky-500 transition duration-300 ease-in-out flex items-center justify-center shadow-md"
+                        onClick={() => handleViewBook(user)}
+                        title="View Book"
+                      >
+                        <FaEye />
+                      </motion.button>
+                    </td>
+                    <td>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 rounded-lg hover:bg-gradient-to-r from-green-200 to-lime-200 text-green-500 transition duration-300 ease-in-out flex items-center justify-center shadow-md"
+                        onClick={() => handleViewQuestions(user)}
+                        title="View Questions"
+                      >
+                        <FaEye />
+                      </motion.button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </motion.table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-4 space-x-2 items-center">
+                <button
+                  className={`btn btn-sm rounded-full ${currentPage === 1 ? "btn-disabled" : "btn-outline"
+                    }`}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeftIcon />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (page) =>
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                  )
+                  .map((page, index, array) => {
+                    const isPrevEllipsis =
+                      page > 2 && array[index - 1] !== page - 1;
+                    const isNextEllipsis =
+                      page < totalPages - 1 && array[index + 1] !== page + 1;
+
+                    return (
+                      <React.Fragment key={page}>
+                        {isPrevEllipsis && (
+                          <span className="text-gray-500">...</span>
+                        )}
+                        <button
+                          className={`btn btn-sm rounded-full ${currentPage === page
+                              ? "bg-gradient-to-r from-green-500 to-lime-500 text-white"
+                              : "btn-outline"
+                            }`}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </button>
+                        {isNextEllipsis && (
+                          <span className="text-gray-500">...</span>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+
+                <button
+                  className={`btn btn-sm rounded-full ${currentPage === totalPages ? "btn-disabled" : "btn-outline"
+                    }`}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRightIcon />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </TitleCard>
     </>
   );

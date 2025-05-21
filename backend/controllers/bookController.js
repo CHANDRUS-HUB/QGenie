@@ -111,10 +111,10 @@ const extractMetadataFromFile = async (filePath) => {
         },
         {
           role: "user",
-          content: `Analyze the book content and return a JSON object with the following format:
+          content: `Analyze the book content and return a JSON object according to the language (e.g., English, Tamil, or any other) with the following format:
   {
     "title": "...", 
-    "medium": "English or Tamil or any other languages — identify the language of the content",  
+    "medium": "Automatically detect and identify the language of the provided content (e.g., English, Tamil, Hindi, etc.).",  
     "chapters": [
       { 
         "chapterName": "...", 

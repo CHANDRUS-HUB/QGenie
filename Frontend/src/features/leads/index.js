@@ -234,46 +234,55 @@ function Leads() {
                   setFile(null);
                   setIsValidFile(null);
                 }}
-              >
+                >
                 Remove
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center space-y-3">
-              <InboxArrowDownIcon className="h-12 w-12 text-green-400 " />
-              <p className="text-gray-700 text-base font-medium text-center">
+                </button>
+              </div>
+              ) : (
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <InboxArrowDownIcon className="h-12 w-12 text-green-400 " />
+                <p className="text-gray-700 text-base font-medium text-center">
                 Drag and drop your file here
-              </p>
-              <p className="text-sm text-gray-500 text-center">
+                </p>
+                <p className="text-sm text-gray-500 text-center">
                 or click below to select a file
-              </p>
+                </p>
 
-              {/* Styled file input */}
-              <label className="inline-block cursor-pointer mt-2 px-4 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold text-sm rounded-lg hover:bg-indigo-100 transition">
+                {/* Styled file input */}
+                <label className="inline-block cursor-pointer mt-2 px-4 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white font-semibold text-sm rounded-lg hover:bg-indigo-100 transition">
                 Choose File
                 <input
                   type="file"
-                  onChange={handleFileChange}
+                  onChange={(e) => {
+                  const selectedFile = e.target.files[0];
+                  if (selectedFile && selectedFile.size > 20 * 1024 * 1024) {
+                    toast.error("File size exceeds 20MB. Please upload a smaller file.");
+                    setFile(null);
+                    setIsValidFile(false);
+                  } else {
+                    handleFileChange(e);
+                  }
+                  }}
                   className="hidden"
                 />
-              </label>
-              <h4 className="text-sm">
+                </label>
+                <h4 className="text-sm">
                 (accepted types: .doc, .docx, .pdf, .txt)
-              </h4>
+                </h4>
+              </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {file && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <div>
-              <label
+            {file && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div>
+                <label
                 htmlFor="subject"
                 className="block mb-2 text-sm font-medium dark:text-gray-400 text-gray-700"
-              >
+                >
                 Subject
-              </label>
-              <select
+                </label>
+                <select
                 id="subject"
                 className="input input-bordered w-full"
                 value={subject}
@@ -451,12 +460,14 @@ function Leads() {
                     </span>{" "}
                     {responseContent.book.total_chapters || "-"}
                   </div>
-                  <div>
-                    <span className="font-bold text-gray-900">
-                      Total Topics:
-                    </span>{" "}
-                    {responseContent.book.metadata?.totalTopics || "N/A"}
-                  </div>
+                  {responseContent.book.metadata?.totalTopics>0 && (
+  <div>
+    <span className="font-bold text-gray-900">
+      Total Topics:
+    </span>{" "}
+    {responseContent.book.metadata.totalTopics}
+  </div>
+)}
                 </div>
               </div>
             )}
